@@ -1,5 +1,8 @@
-package ar.edu.itba.pod.server;
+package ar.edu.itba.pod.client;
 
+import ar.edu.itba.pod.model.Party;
+import ar.edu.itba.pod.model.Province;
+import ar.edu.itba.pod.model.Vote;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -24,7 +27,7 @@ public class FileManager {
     private static List<Vote> votes;
 
     public static void main(String[] args) {
-        readCSV("/home/bianca/Desktop/TP-POD/server */src/main/resources/test.csv");
+        readCSV("/home/bianca/Desktop/TP-POD/client/src/main/resources/test.csv");
     }
 
     public static void readCSV(final String path) {
