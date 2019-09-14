@@ -2,7 +2,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 
-public interface AdministrationtService extends Remote {
+public interface AdministrationService extends Remote {
 
     boolean startElections() throws RemoteException;
 
