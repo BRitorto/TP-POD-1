@@ -20,21 +20,15 @@ import java.util.stream.Collectors;
 
 public class FileManager {
 
-    private Map<Party, Double> tablePercentages; // sistema tradicional
-    private Map<Party, Double> provincePercentages; // STV
-    private Map<Party, Double> nationalPercentages; // AV
-
-    private static List<Vote> votes;
-
     public static void main(String[] args) {
-        readCSV("/home/bianca/Desktop/TP-POD/client/src/main/resources/test.csv");
+        List<Vote> votes = readCSV("/home/bianca/Desktop/TP-POD/client/src/main/resources/test.csv");
     }
 
-    public static void readCSV(final String path) {
+    private static List<Vote> readCSV(final String path) {
         try {
             Reader reader = Files.newBufferedReader(Paths.get(path));
             CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withDelimiter(';'));
-            votes = new LinkedList<>();
+            List<Vote> votes = new LinkedList<>();
             for (CSVRecord csvRecord : csvParser) {
                 Integer table = Integer.parseInt(csvRecord.get(0));
                 String provinceString = csvRecord.get(1);
@@ -45,9 +39,11 @@ public class FileManager {
                         .collect(Collectors.toList());
                 votes.add(new Vote(table, Province.valueOf(provinceString), partyList));
             }
+            return votes;
 
         } catch (IOException e) {
             e.printStackTrace();
+            return null;
         }
     }
 

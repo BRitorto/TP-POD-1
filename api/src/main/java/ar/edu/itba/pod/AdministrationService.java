@@ -10,6 +10,6 @@ public interface AdministrationService extends Remote {
 
     String getElectionsState() throws RemoteException;
 
-    void endElections() throws RemoteException;
+    boolean endElections() throws RemoteException;
 
 }

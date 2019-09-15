@@ -20,7 +20,7 @@ public class AdministrationClient implements AdministrationService {
     }
 
     @Override
-    public void endElections() throws RemoteException {
+    public boolean endElections() throws RemoteException {
 
     }
 }
