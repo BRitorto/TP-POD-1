@@ -5,7 +5,7 @@ import java.io.Serializable;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-public interface ClientCallbackInterface extends Remote, Serializable {
+public interface ClientInterface extends Remote, Serializable {
 
     void ping() throws RemoteException;
 
