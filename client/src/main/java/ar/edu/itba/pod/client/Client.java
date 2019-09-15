@@ -27,7 +27,7 @@ public class Client<T extends Remote> extends UnicastRemoteObject {
     }
 
     protected void lookup() throws RemoteException, NotBoundException, MalformedURLException {
-        this.remoteService = (T) Naming.lookup("//" + getParameter("serverAddress").orElseThrow(IllegalArgumentException::new)
+        this.remoteService = (T) Naming.lookup("//" + getParameter("serverAddress").get()
                 + "/" + this.remoteServiceName);
     }
 
