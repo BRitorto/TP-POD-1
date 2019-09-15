@@ -141,17 +141,17 @@ public class Server implements AdministrationService, InspectorService, QuerySer
         logger.info("Voting System Server Starting.");
 
         final Server servant = new Server();
-        final Remote remote = UnicastRemoteObject.exportObject(servant, 0);
+        final Remote remote = UnicastRemoteObject.exportObject(servant, 8081);
         final Registry registry = LocateRegistry.getRegistry();
 
-        logger.info("Rebinding Management Service");
-        registry.rebind("management", remote);
-        logger.info("Rebinding Ballot Service");
-        registry.rebind("ballot", remote);
+        logger.info("Rebinding Administration Service");
+        registry.rebind("administration", remote);
+        logger.info("Rebinding Voting Service");
+        registry.rebind("voting", remote);
         logger.info("Rebinding Query Service");
         registry.rebind("query", remote);
-        logger.info("Rebinding Audit Service");
-        registry.rebind("audit", remote);
+        logger.info("Rebinding Inspector Service");
+        registry.rebind("inspector", remote);
     }
 
 }

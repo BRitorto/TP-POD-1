@@ -1,5 +1,6 @@
 package ar.edu.itba.pod.client;
 
+import ar.edu.itba.pod.VotingService;
 import ar.edu.itba.pod.model.Party;
 import ar.edu.itba.pod.model.Province;
 import ar.edu.itba.pod.model.Vote;
@@ -10,20 +11,38 @@ import org.apache.commons.csv.CSVRecord;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.util.*;
 import java.util.stream.Collectors;
 
-public class FileManager {
+public class VotingClient extends Client<VotingService> {
 
-    public static void main(String[] args) {
-        List<Vote> votes = readCSV("/home/bianca/Desktop/TP-POD/client/src/main/resources/test.csv");
+    public VotingClient(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
+        super("voting");
+        this.addOption("csvPath", "Path of the input file with votes", true, true);
+        this.parse(args);
+        this.lookup();
     }
 
-    private static List<Vote> readCSV(final String path) {
+    public static void main(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
+        VotingClient votingClient = new VotingClient(args);
+        String votesPath = votingClient.getParameter("csvPath").orElseThrow(IllegalArgumentException::new);
+        List<Vote> votes = votingClient.readCSV(votesPath);
+        votingClient.ballot(votes);
+        System.out.println(votes.size() + " votes registered");
+        //List<Vote> votes = readCSV("/home/bianca/Desktop/eTP-POD/client/src/main/resources/test.csv");
+    }
+
+    public void ballot(Collection<Vote> votes) throws RemoteException {
+        Objects.requireNonNull(votes);
+        this.remoteService.ballot(votes);
+    }
+
+    private List<Vote> readCSV(final String path) {
         try {
             Reader reader = Files.newBufferedReader(Paths.get(path));
             CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withDelimiter(';'));
