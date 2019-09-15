@@ -21,6 +21,6 @@ public class AdministrationClient implements AdministrationService {
 
     @Override
     public boolean endElections() throws RemoteException {
-
+        return false;
     }
 }

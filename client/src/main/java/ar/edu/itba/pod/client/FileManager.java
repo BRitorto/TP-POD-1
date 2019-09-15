@@ -15,7 +15,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class FileManager {
@@ -30,7 +29,7 @@ public class FileManager {
             CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withDelimiter(';'));
             List<Vote> votes = new LinkedList<>();
             for (CSVRecord csvRecord : csvParser) {
-                Integer table = Integer.parseInt(csvRecord.get(0));
+                Long table = Long.parseLong(csvRecord.get(0));
                 String provinceString = csvRecord.get(1);
                 String choices = csvRecord.get(2);
                 List<String> choicesList = Arrays.asList(choices.split(","));

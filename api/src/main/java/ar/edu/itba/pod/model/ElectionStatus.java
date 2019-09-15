@@ -1,9 +1,9 @@
 package ar.edu.itba.pod.model;
 
 public enum ElectionStatus {
-    STARTED("Elections have started"),
-    ENDED("Elections already ended"),
-    NOTSTARTEDYET("Elections have not started yet");
+    OPEN("Elections have started"),
+    CLOSED("Elections already ended"),
+    FINISHED("Elections have not started yet");
 
     private String statusDescription;
 

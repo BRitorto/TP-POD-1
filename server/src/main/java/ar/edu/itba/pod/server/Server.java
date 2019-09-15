@@ -7,19 +7,28 @@ import ar.edu.itba.pod.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Server implements AdministrationService, InspectorService, QueryService, VotingService {
     private static Logger logger = LoggerFactory.getLogger(Server.class);
 
-    private ElectionStatus electionStatus = ElectionStatus.ENDED;
+    private ElectionStatus electionStatus = ElectionStatus.CLOSED;
+    private Map<Long, List<Vote>> allVotes = new ConcurrentHashMap<>();
+    private Map<Long, List<ClientInterface>> inspectors = new ConcurrentHashMap<>();
 
     @Override
-    public boolean startElections() throws RemoteException {
-        if (electionStatus.equals(ElectionStatus.NOTSTARTEDYET)) {
-            this.electionStatus = ElectionStatus.STARTED;
+    public synchronized boolean startElections() throws RemoteException {
+        if (electionStatus.equals(ElectionStatus.FINISHED)) {
+            this.electionStatus = ElectionStatus.OPEN;
             return true;
         }
         return false; // arrojar un error consigna
@@ -31,9 +40,9 @@ public class Server implements AdministrationService, InspectorService, QuerySer
     }
 
     @Override
-    public boolean endElections() throws RemoteException {
-        if (electionStatus.equals(ElectionStatus.STARTED)) {
-            this.electionStatus = ElectionStatus.ENDED;
+    public synchronized boolean endElections() throws RemoteException {
+        if (electionStatus.equals(ElectionStatus.OPEN)) {
+            this.electionStatus = ElectionStatus.CLOSED;
             return true;
         }
         return false; // arrojar un error consigna
@@ -51,20 +60,24 @@ public class Server implements AdministrationService, InspectorService, QuerySer
 
     @Override
     public void notifyInspectors(Vote vote) throws RemoteException {
-
+        return;
     }
 
     @Override
     public Collection<PartyResults> queryByTable(long table) throws RemoteException {
         switch(this.electionStatus) {
-            case NOTSTARTEDYET:
+            case FINISHED:
                 throw new ElectionsNotStartedException("Elections haven't started yet!");
 
-            case STARTED:
+            case OPEN:
+                long[] partyVotesCounter = new long[Party.values().length];
+                long totalVotes;
+
+
                 // resultdaos parciales
                 return null;
 
-            case ENDED:
+            case CLOSED:
                 // resultados finales
                 return null;
             default:
@@ -75,14 +88,14 @@ public class Server implements AdministrationService, InspectorService, QuerySer
     @Override
     public Collection<PartyResults> queryByProvince(Province province) throws RemoteException {
         switch(this.electionStatus) {
-            case NOTSTARTEDYET:
+            case FINISHED:
                 throw new ElectionsNotStartedException("Elections haven't started yet!");
 
-            case STARTED:
+            case OPEN:
                 // resultdaos parciales
                 return null;
 
-            case ENDED:
+            case CLOSED:
                 // resultados finales
                 return null;
             default:
@@ -93,14 +106,14 @@ public class Server implements AdministrationService, InspectorService, QuerySer
     @Override
     public Collection<PartyResults> queryByCountry() throws RemoteException {
         switch(this.electionStatus) {
-            case NOTSTARTEDYET:
+            case FINISHED:
                 throw new ElectionsNotStartedException("Elections haven't started yet!");
 
-            case STARTED:
+            case OPEN:
                 // resultdaos parciales
                 return null;
 
-            case ENDED:
+            case CLOSED:
                 // resultados finales
                 return null;
             default:
@@ -109,8 +122,8 @@ public class Server implements AdministrationService, InspectorService, QuerySer
     }
 
     @Override
-    public void ballot(Collection<Vote> votes) throws RemoteException, ElectionsNotStartedException {
-        if (!this.electionStatus.equals(ElectionStatus.STARTED)) {
+    public void ballot(Collection<Vote> votes) throws RemoteException, ElectionsNotStartedException, EmptyVotesException {
+        if (!this.electionStatus.equals(ElectionStatus.OPEN)) {
             throw new ElectionsNotStartedException("Elections haven't started yet!");
         }
 
@@ -118,8 +131,27 @@ public class Server implements AdministrationService, InspectorService, QuerySer
             throw new EmptyVotesException("Please enter at least one vote");
         }
 
-        // guardar los votos
+        votes.forEach(vote -> {
+            //notifyInspectors(vote);
+            this.allVotes.computeIfAbsent(vote.getTable(), key -> new ArrayList<>()).add(vote);
+        });
     }
 
+    public static void main(String[] args) throws RemoteException {
+        logger.info("Voting System Server Starting.");
+
+        final Server servant = new Server();
+        final Remote remote = UnicastRemoteObject.exportObject(servant, 0);
+        final Registry registry = LocateRegistry.getRegistry();
+
+        logger.info("Rebinding Management Service");
+        registry.rebind("management", remote);
+        logger.info("Rebinding Ballot Service");
+        registry.rebind("ballot", remote);
+        logger.info("Rebinding Query Service");
+        registry.rebind("query", remote);
+        logger.info("Rebinding Audit Service");
+        registry.rebind("audit", remote);
+    }
 
 }
