@@ -1,5 +1,7 @@
 package ar.edu.itba.pod;
 
+import ar.edu.itba.pod.model.Party;
+
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
