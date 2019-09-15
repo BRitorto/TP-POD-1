@@ -1,3 +1,5 @@
+package ar.edu.itba.pod;
+
 import ar.edu.itba.pod.model.PartyResults;
 import ar.edu.itba.pod.model.Province;
 

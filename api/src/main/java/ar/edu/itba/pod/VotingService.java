@@ -1,3 +1,5 @@
+package ar.edu.itba.pod;
+
 import ar.edu.itba.pod.exceptions.ElectionsNotStartedException;
 import ar.edu.itba.pod.model.Vote;
 

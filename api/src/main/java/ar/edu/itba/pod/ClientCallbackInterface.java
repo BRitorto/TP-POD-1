@@ -1,3 +1,4 @@
+package ar.edu.itba.pod;
 import ar.edu.itba.pod.model.Vote;
 
 import java.io.Serializable;
