@@ -1,6 +1,7 @@
 package ar.edu.itba.pod.client;
 
 import ar.edu.itba.pod.AdministrationService;
+import ar.edu.itba.pod.model.ElectionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,9 +28,10 @@ public class AdministrationClient extends Client<AdministrationService> {
 
 
     public boolean startElections() throws RemoteException {
-        this.remoteService.getElectionsState();
+        boolean open = this.remoteService.startElections();
+        System.out.println(open);
         System.out.println(this.remoteService.getElectionsState());
-        return this.remoteService.startElections();
+        return open;
     }
 
 
@@ -40,8 +42,9 @@ public class AdministrationClient extends Client<AdministrationService> {
 
 
     public boolean endElections() throws RemoteException {
+        boolean close = this.remoteService.endElections();
         System.out.println(this.remoteService.getElectionsState());
-        return this.remoteService.endElections();
+        return close;
     }
 
     private static enum actionType {
