@@ -2,6 +2,7 @@ package ar.edu.itba.pod.client;
 
 import ar.edu.itba.pod.ClientInterface;
 import ar.edu.itba.pod.FiscalService;
+import ar.edu.itba.pod.exceptions.ElectionsStartedException;
 import ar.edu.itba.pod.model.Party;
 
 import java.net.MalformedURLException;
@@ -36,9 +37,10 @@ public class FiscalClient extends Client<FiscalService> implements ClientInterfa
     public void register(Long pollingPlaceId, Party party, ClientInterface callback) throws RemoteException {
         Objects.requireNonNull(this.remoteService);
         if(this.remoteService.registerFiscal(pollingPlaceId, party, callback) == -1){
-            System.out.println("Aca hay que tirar un error, no se puede registrar");
+            System.out.println("You should register fiscals before the election starts");
+            throw new ElectionsStartedException("Can't register a new fiscal");
         }else {
-            System.out.println("number of values in the map " + this.remoteService.registerFiscal(pollingPlaceId, party, callback));
+            System.out.println("Number of values in the map " + this.remoteService.registerFiscal(pollingPlaceId, party, callback));
             System.out.println("Fiscal of " + callback.getParty() + " registered on polling place " + pollingPlaceId);
         }
     }
@@ -58,7 +60,7 @@ public class FiscalClient extends Client<FiscalService> implements ClientInterfa
 
 
     public void ping() throws RemoteException {
-        System.out.println("this is a ping");
+        System.out.println("This is a ping");
     }
 
 

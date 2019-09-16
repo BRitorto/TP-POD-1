@@ -1,6 +1,8 @@
 package ar.edu.itba.pod.client;
 
 import ar.edu.itba.pod.ManagementService;
+import ar.edu.itba.pod.exceptions.ElectionsEndedException;
+import ar.edu.itba.pod.exceptions.ElectionsNotStartedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +29,10 @@ public class ManagementClient extends Client<ManagementService> {
 
     public boolean startElections() throws RemoteException {
         boolean open = this.remoteService.startElections();
-        System.out.println(open);
+        if(!open){
+            System.out.println("Elections have already ended, you can't restart them");
+            throw new ElectionsEndedException("Elections have already ended");
+        }
         System.out.println(this.remoteService.getElectionsState());
         return open;
     }
@@ -41,6 +46,10 @@ public class ManagementClient extends Client<ManagementService> {
 
     public boolean endElections() throws RemoteException {
         boolean close = this.remoteService.endElections();
+        if(!close){
+            System.out.println("Elections have not started yet, you can't end them before they start");
+            throw new ElectionsNotStartedException("Elections have not started yet");
+        }
         System.out.println(this.remoteService.getElectionsState());
         return close;
     }

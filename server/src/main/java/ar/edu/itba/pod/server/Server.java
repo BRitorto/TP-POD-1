@@ -35,7 +35,7 @@ public class Server implements ManagementService, FiscalService, QueryService, V
             this.electionStatus = ElectionStatus.OPEN;
             return true;
         }
-        return false; // arrojar un error consigna
+        return false;
     }
 
     @Override
@@ -45,7 +45,7 @@ public class Server implements ManagementService, FiscalService, QueryService, V
 
     @Override
     public synchronized boolean endElections() throws RemoteException {
-        if (electionStatus.equals(ElectionStatus.OPEN)) {
+        if (electionStatus.equals(ElectionStatus.OPEN) || electionStatus.equals(ElectionStatus.CLOSED)) {
             this.electionStatus = ElectionStatus.CLOSED;
             return true;
         }
