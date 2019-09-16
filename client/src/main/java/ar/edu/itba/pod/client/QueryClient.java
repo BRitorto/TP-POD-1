@@ -24,9 +24,9 @@ public class QueryClient extends Client<QueryService> {
 
     public QueryClient(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
         super("query");
-        this.addOption("stateName", "name of the state chose to solve type 2 query", true, false);
-        this.addOption("pollingPlaceNumber", "Number of the polling place chose to solve type 3 query", true, false);
-        this.addOption("fileName", "Path of the output file which contains the query data", true, true);
+        this.addOption("state", "name of the state chose to solve type 2 query", true, false);
+        this.addOption("id", "Number of the polling place chose to solve type 3 query", true, false);
+        this.addOption("outPath", "Path of the output file which contains the query data", true, true);
         this.parse(args);
         this.lookup();
     }
@@ -49,18 +49,18 @@ public class QueryClient extends Client<QueryService> {
         logger.info("Starting query client");
 
         final QueryClient queryClient = new QueryClient(args);
-        boolean hasStateName = queryClient.hasParameter("stateNumber");
-        boolean hasPollingPlaceNumber = queryClient.hasParameter("pollingPlaceNumber");
+        boolean hasStateName = queryClient.hasParameter("state");
+        boolean hasPollingPlaceNumber = queryClient.hasParameter("id");
 
         if(hasPollingPlaceNumber && hasStateName) {
             throw new IllegalArgumentException("Exactly 1 or none parameter required !");
         }
 
-        String fileName = queryClient.getParameter("fileName").orElseThrow(() -> new IllegalArgumentException("No file name specified"));
+        String fileName = queryClient.getParameter("outPath").orElseThrow(() -> new IllegalArgumentException("No file name specified"));
 
         if(hasStateName) {
             logger.info("has state name");
-            String stateName = queryClient.getParameter("stateNumber").orElseThrow(() -> new IllegalArgumentException("No state name specified"));
+            String stateName = queryClient.getParameter("state").orElseThrow(() -> new IllegalArgumentException("No state name specified"));
             //System.out.println(queryClient.queryByProvince(Province.valueOf(stateName)));
             writeToCSV(fileName, queryClient.queryByProvince(Province.valueOf(stateName)));
             return;
@@ -69,7 +69,7 @@ public class QueryClient extends Client<QueryService> {
         if(hasPollingPlaceNumber) {
             logger.info("has polling place number");
 
-            Long pollingPlaceNumber = Long.parseLong(queryClient.getParameter("pollingPlaceNumber").orElseThrow(() -> new IllegalArgumentException("No polling place number specified")));
+            Long pollingPlaceNumber = Long.parseLong(queryClient.getParameter("id").orElseThrow(() -> new IllegalArgumentException("No polling place number specified")));
             //System.out.println(queryClient.queryByTable(pollingPlaceNumber));
             writeToCSV(fileName, queryClient.queryByTable(pollingPlaceNumber));
             return;
