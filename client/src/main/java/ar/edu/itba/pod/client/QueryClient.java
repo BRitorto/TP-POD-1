@@ -42,7 +42,7 @@ public class QueryClient extends Client<QueryService> {
         return this.remoteService.queryByCountry();
     }
 
-    public void main (@Snippet.NonNullParameter String[] args) throws RemoteException, NotBoundException, MalformedURLException {
+    public void main (String[] args) throws RemoteException, NotBoundException, MalformedURLException {
         logger.info("Starting query client");
 
         final QueryClient queryClient = new QueryClient(args);
