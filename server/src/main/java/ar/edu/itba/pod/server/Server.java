@@ -4,6 +4,7 @@ import ar.edu.itba.pod.*;
 import ar.edu.itba.pod.exceptions.ElectionsNotStartedException;
 import ar.edu.itba.pod.exceptions.EmptyVotesException;
 import ar.edu.itba.pod.model.*;
+import com.sun.webkit.InspectorClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,9 +22,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Server implements AdministrationService, InspectorService, QueryService, VotingService {
     private static Logger logger = LoggerFactory.getLogger(Server.class);
 
-    private ElectionStatus electionStatus = ElectionStatus.CLOSED;
+    private ElectionStatus electionStatus = ElectionStatus.OPEN;
     private Map<Long, List<Vote>> allVotes = new ConcurrentHashMap<>();
     private Map<Long, List<ClientInterface>> inspectors = new ConcurrentHashMap<>();
+    private Map<Party, Long> totalVotesByParty = new ConcurrentHashMap<>();
 
     @Override
     public synchronized boolean startElections() throws RemoteException {
@@ -58,9 +60,28 @@ public class Server implements AdministrationService, InspectorService, QuerySer
         return false;
     }
 
-    @Override
+
     public void notifyInspectors(Vote vote) throws RemoteException {
-        return;
+        inspectors.entrySet().stream().forEach(inspectorList ->
+                inspectorList.getValue().forEach(inspector -> {
+                    vote.getChoices().forEach(choice -> {
+                        /* actualizo la cantidad total de votos por partido */
+//                        if(!totalVotesByParty.keySet().contains(choice)) {
+//                            totalVotesByParty.put(choice, (long) 1);
+//                        } else {
+//                            totalVotesByParty.put(choice, totalVotesByParty.get(choice) + 1);
+//                        }
+                        try {
+                            if(inspector.getParty().equals(choice)) {
+                                inspector.notifyChanges(choice, vote.getTable());
+                            }
+                        } catch (RemoteException e) {
+                            e.printStackTrace();
+                        }
+                    });
+                })
+        );
+
     }
 
     @Override
@@ -132,7 +153,12 @@ public class Server implements AdministrationService, InspectorService, QuerySer
         }
 
         votes.forEach(vote -> {
-            //notifyInspectors(vote);
+            /* el try catch?... */
+            try {
+                notifyInspectors(vote);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
             this.allVotes.computeIfAbsent(vote.getTable(), key -> new ArrayList<>()).add(vote);
         });
     }
@@ -141,7 +167,7 @@ public class Server implements AdministrationService, InspectorService, QuerySer
         logger.info("Voting System Server Starting.");
 
         final Server servant = new Server();
-        final Remote remote = UnicastRemoteObject.exportObject(servant, 8081);
+        final Remote remote = UnicastRemoteObject.exportObject(servant, 0);
         final Registry registry = LocateRegistry.getRegistry();
 
         logger.info("Rebinding Administration Service");

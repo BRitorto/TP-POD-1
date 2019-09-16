@@ -45,6 +45,7 @@ public class InspectorClient extends Client<InspectorService> implements ClientI
         return id;
     }
 
+    @Override
     public Party getParty() {
         return party;
     }
@@ -58,11 +59,9 @@ public class InspectorClient extends Client<InspectorService> implements ClientI
         System.out.println("this is a ping");
     }
 
-
     @Override
-    public void notifyChanges(Vote vote) throws RemoteException {
-        //if(vote.getPoliticalParties().contains(this.party))
-        System.out.println(vote);
+    public void notifyChanges(Party party, Long table) throws RemoteException {
+        System.out.println("New vote for " + party.name() + " on polling place " + table);
     }
 
     @Override
