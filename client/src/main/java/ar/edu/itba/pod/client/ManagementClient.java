@@ -27,7 +27,7 @@ public class ManagementClient extends Client<ManagementService> {
     }
 
 
-    public boolean startElections() throws RemoteException {
+    public boolean startElections() throws RemoteException, ElectionsEndedException {
         boolean open = this.remoteService.startElections();
         if(!open){
             System.out.println("Elections have already ended, you can't restart them");
@@ -44,7 +44,7 @@ public class ManagementClient extends Client<ManagementService> {
     }
 
 
-    public boolean endElections() throws RemoteException {
+    public boolean endElections() throws RemoteException, ElectionsNotStartedException {
         boolean close = this.remoteService.endElections();
         if(!close){
             System.out.println("Elections have not started yet, you can't end them before they start");

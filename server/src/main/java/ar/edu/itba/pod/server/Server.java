@@ -169,13 +169,15 @@ public class Server implements ManagementService, FiscalService, QueryService, V
     }
 
     @Override
-    public void ballot(Collection<Vote> votes) throws RemoteException, ElectionsNotStartedException, EmptyVotesException {
+    public int ballot(Collection<Vote> votes) throws RemoteException, ElectionsNotStartedException, EmptyVotesException {
         if (!this.electionStatus.equals(ElectionStatus.OPEN)) {
-            throw new ElectionsNotStartedException("Elections haven't started yet!");
+            return -1;
+//            throw new ElectionsNotStartedException("Elections haven't started yet!");
         }
 
         if (votes.size() == 0) {
-            throw new EmptyVotesException("Please enter at least one vote");
+            return -2;
+//            throw new EmptyVotesException("Please enter at least one vote");
         }
 
         votes.forEach(vote -> {
@@ -187,6 +189,7 @@ public class Server implements ManagementService, FiscalService, QueryService, V
             }
             this.allVotes.computeIfAbsent(vote.getTable(), key -> new ArrayList<>()).add(vote);
         });
+        return 0;
     }
 
     public static void main(String[] args) throws RemoteException {

@@ -2,6 +2,7 @@ package ar.edu.itba.pod.client;
 
 import ar.edu.itba.pod.ClientInterface;
 import ar.edu.itba.pod.FiscalService;
+import ar.edu.itba.pod.exceptions.ElectionsEndedException;
 import ar.edu.itba.pod.exceptions.ElectionsStartedException;
 import ar.edu.itba.pod.model.Party;
 
@@ -34,7 +35,7 @@ public class FiscalClient extends Client<FiscalService> implements ClientInterfa
         fiscalClient.register(Long.valueOf(pollingPlaceId), party, fiscalClient);
     }
 
-    public void register(Long pollingPlaceId, Party party, ClientInterface callback) throws RemoteException {
+    public void register(Long pollingPlaceId, Party party, ClientInterface callback) throws RemoteException, ElectionsStartedException {
         Objects.requireNonNull(this.remoteService);
         if(this.remoteService.registerFiscal(pollingPlaceId, party, callback) == -1){
             System.out.println("You should register fiscals before the election starts");

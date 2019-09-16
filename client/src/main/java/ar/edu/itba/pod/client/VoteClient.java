@@ -1,6 +1,8 @@
 package ar.edu.itba.pod.client;
 
 import ar.edu.itba.pod.VoteService;
+import ar.edu.itba.pod.exceptions.ElectionsNotStartedException;
+import ar.edu.itba.pod.exceptions.EmptyVotesException;
 import ar.edu.itba.pod.model.Party;
 import ar.edu.itba.pod.model.Province;
 import ar.edu.itba.pod.model.Vote;
@@ -37,9 +39,15 @@ public class VoteClient extends Client<VoteService> {
         //List<Vote> votes = readCSV("/home/bianca/Desktop/eTP-POD/client/src/main/resources/test.csv");
     }
 
-    public void ballot(Collection<Vote> votes) throws RemoteException {
+    public void ballot(Collection<Vote> votes) throws RemoteException, ElectionsNotStartedException, EmptyVotesException {
         Objects.requireNonNull(votes);
-        this.remoteService.ballot(votes);
+        int ballot =  this.remoteService.ballot(votes);
+        if(ballot == -1){
+            throw new ElectionsNotStartedException("Elections haven't started yet!");
+        }else if (ballot == -2){
+            throw new EmptyVotesException("Please enter at least one vote");
+        }
+
     }
 
     private List<Vote> readCSV(final String path) {

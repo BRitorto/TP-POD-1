@@ -9,5 +9,5 @@ import java.util.Collection;
 
 
 public interface VoteService extends Remote {
-    void ballot(Collection<Vote> votes) throws RemoteException, ElectionsNotStartedException;
+    int ballot(Collection<Vote> votes) throws RemoteException, ElectionsNotStartedException;
 }
