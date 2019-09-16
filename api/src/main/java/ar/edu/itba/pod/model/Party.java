@@ -14,5 +14,6 @@ public enum Party {
     SNAKE,
     JACKALOPE,
     BUFFALO
-
 }
+
+

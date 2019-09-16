@@ -7,21 +7,22 @@ import ar.edu.itba.pod.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.ParameterizedType;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class Server implements ManagementService, FiscalService, QueryService, VoteService {
     private static Logger logger = LoggerFactory.getLogger(Server.class);
 
     private ElectionStatus electionStatus = ElectionStatus.FINISHED;
+    // table, votos
     private Map<Long, List<Vote>> allVotes = new ConcurrentHashMap<>();
     // table, fiscal
     private Map<Long, List<ClientInterface>> fiscals = new ConcurrentHashMap<>();
@@ -112,20 +113,48 @@ public class Server implements ManagementService, FiscalService, QueryService, V
 
     @Override
     public Collection<PartyResults> queryByTable(long table) throws RemoteException {
+
+        Long[] partyVotesCounter = new Long[Party.values().length];
+        long totalVotes;
+
+                /* tengo el numero de mesa, con eso obtengo el listado de votos que hay
+                en esa mesa */
+        List<Vote> votes = this.allVotes.get(table);
+
+        if(votes == null){
+            /* manejarlo */
+            totalVotes = 0;
+        }else{
+                   /* en cada posicion del array correspondiente al party, voy a colocar la cantidad
+                   de votos que vaya sumando*/
+            votes.forEach(p -> partyVotesCounter[p.getChoices().get(0).ordinal()]++);
+            totalVotes = votes.size();
+        }
+        
+
         switch(this.electionStatus) {
             case FINISHED:
                 throw new ElectionsNotStartedException("Elections haven't started yet!");
 
-            case OPEN:
-                long[] partyVotesCounter = new long[Party.values().length];
-                long totalVotes;
+            case OPEN: /* siempre FPTP, sin importar que dimension se este consulando, vamos a devolver
+             como van las elecciones hasta el momento, cuantos votos tiene cada partido politico*/
 
+                Collection<PartyResults> parcial =
+                        Arrays.stream(Party.values()).
+                                map(p -> new PartyResults(p, partyVotesCounter[p.ordinal()]*100/totalVotes)).
+                                collect(Collectors.toList());
 
-                // resultdaos parciales
-                return null;
+                return parcial;
 
             case CLOSED:
-                // resultados finales
+                /* por lo que yo entiendo me tengo que quedar solo con el ganador de la mesa */
+
+                Optional<Long> s = Arrays.asList(partyVotesCounter).stream().max(Long::compare);
+                int index = Arrays.asList(partyVotesCounter).indexOf(s);
+
+
+                PartyResults f = new PartyResults(Party.values()[index], s.get());
+                /* TODO: result a collection & RETORNARLO*/
                 return null;
             default:
                 throw new RuntimeException("Invalid election state.");
