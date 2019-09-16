@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class QueryClient extends Client<QueryService> {
@@ -22,7 +23,7 @@ public class QueryClient extends Client<QueryService> {
     private static Logger logger = LoggerFactory.getLogger(Client.class);
 
     public QueryClient(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
-        super("Query");
+        super("query");
         this.addOption("stateName", "name of the state chose to solve type 2 query", true, false);
         this.addOption("pollingPlaceNumber", "Number of the polling place chose to solve type 3 query", true, false);
         this.addOption("fileName", "Path of the output file which contains the query data", true, true);
@@ -31,7 +32,9 @@ public class QueryClient extends Client<QueryService> {
     }
 
     public Collection<PartyResults> queryByTable(long table) throws RemoteException {
-        return this.remoteService.queryByTable(table);
+        Collection<PartyResults> p2 = this.remoteService.queryByTable(table);
+        System.out.println(p2);
+        return p2;
     }
 
     public Collection<PartyResults> queryByProvince(Province province) throws RemoteException {
