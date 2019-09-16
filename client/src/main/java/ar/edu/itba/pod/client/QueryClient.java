@@ -56,12 +56,14 @@ public class QueryClient extends Client<QueryService> {
         String fileName = queryClient.getParameter("fileName").orElseThrow(() -> new IllegalArgumentException("No file name specified"));
 
         if(hasStateName) {
+            logger.info("has state name");
             String stateName = queryClient.getParameter("stateNumber").orElseThrow(() -> new IllegalArgumentException("No state name specified"));
             System.out.println(queryClient.queryByProvince(Province.valueOf(stateName)));
             return;
         }
 
         if(hasPollingPlaceNumber) {
+            logger.info("has polling place number");
             Long pollingPlaceNumber = Long.parseLong(queryClient.getParameter("pollingPlaceNumber").orElseThrow(() -> new IllegalArgumentException("No polling place number specified")));
             System.out.println(queryClient.queryByTable(pollingPlaceNumber));
             return;
@@ -77,6 +79,8 @@ public class QueryClient extends Client<QueryService> {
             33,00%;OWL
             32,00%;GORILLA
             16,00%;TIGER */
+
+        logger.info("Writing to CSV");
 
         try (Writer writer = new BufferedWriter(
                 new OutputStreamWriter(new FileOutputStream(fileName), StandardCharsets.UTF_8)
