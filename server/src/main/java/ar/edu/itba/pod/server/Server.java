@@ -130,7 +130,7 @@ public class Server implements ManagementService, FiscalService, QueryService, V
             votes.forEach(p -> partyVotesCounter[p.getChoices().get(0).ordinal()]++);
             totalVotes = votes.size();
         }
-        
+
 
         switch(this.electionStatus) {
             case FINISHED:
@@ -153,7 +153,7 @@ public class Server implements ManagementService, FiscalService, QueryService, V
                 int index = Arrays.asList(partyVotesCounter).indexOf(s);
 
 
-                PartyResults f = new PartyResults(Party.values()[index], s.get());
+                PartyResults f = new PartyResults(Party.values()[index], s.get()*100/totalVotes);
                 /* TODO: result a collection & RETORNARLO*/
                 return null;
             default:
