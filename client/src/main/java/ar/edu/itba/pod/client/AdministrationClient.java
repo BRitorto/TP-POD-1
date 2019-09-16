@@ -7,12 +7,10 @@ import org.slf4j.LoggerFactory;
 import java.net.MalformedURLException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.util.Objects;
 
-/**
- * Created by estebankramer on 15/09/2019.
- */
 
-public class AdministrationClient extends Client<AdministrationClient> implements AdministrationService {
+public class AdministrationClient extends Client<AdministrationService> {
 
     /*La información de cuál es la acción a realizar se recibe a través de argumentos de línea de
     comando al llamar a la clase del cliente de administración y el resultado se debe imprimir en
@@ -21,33 +19,37 @@ public class AdministrationClient extends Client<AdministrationClient> implement
     private static Logger logger = LoggerFactory.getLogger(Client.class);
 
     public AdministrationClient(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
-        super("Administration");
-        this.addOption("actionName", "Name of the action to follow", true, true);
+        super("administration");
+        this.addOption("action", "Name of the action to follow", true, true);
         this.parse(args);
         this.lookup();
     }
 
-    @Override
+
     public boolean startElections() throws RemoteException {
+        this.remoteService.getElectionsState();
         System.out.println(this.remoteService.getElectionsState());
         return this.remoteService.startElections();
     }
 
-    @Override
+
     public String getElectionsState() throws RemoteException {
         System.out.println(this.remoteService.getElectionsState());
         return this.remoteService.getElectionsState();
     }
 
-    @Override
+
     public boolean endElections() throws RemoteException {
         System.out.println(this.remoteService.getElectionsState());
         return this.remoteService.endElections();
     }
 
     private static enum actionType {
+        /* abre los comicios */
         OPEN,
+        /* consulta el estado de los comicios*/
         STATE,
+        /* cierra los comicios*/
         CLOSE;
 
         @Override
@@ -61,7 +63,7 @@ public class AdministrationClient extends Client<AdministrationClient> implement
 
         final AdministrationClient administrationClient = new AdministrationClient(args);
 
-        String actionName = administrationClient.getParameter("actionName").orElseThrow(() -> new IllegalArgumentException("No action name specified"));
+        String actionName = administrationClient.getParameter("action").orElseThrow(() -> new IllegalArgumentException("No action name specified"));
 
         if(actionName.equalsIgnoreCase("open")){
             administrationClient.startElections();
