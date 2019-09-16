@@ -1,9 +1,8 @@
 package ar.edu.itba.pod.client;
 
 import ar.edu.itba.pod.ClientInterface;
-import ar.edu.itba.pod.InspectorService;
+import ar.edu.itba.pod.FiscalService;
 import ar.edu.itba.pod.model.Party;
-import ar.edu.itba.pod.model.Vote;
 
 import java.net.MalformedURLException;
 import java.rmi.NotBoundException;
@@ -11,12 +10,12 @@ import java.rmi.RemoteException;
 import java.util.Objects;
 
 
-public class InspectorClient extends Client<InspectorService> implements ClientInterface{
+public class FiscalClient extends Client<FiscalService> implements ClientInterface{
     private Long id;
     private Party party;
 
-    public InspectorClient(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
-        super("audit");
+    public FiscalClient(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
+        super("fiscal");
         this.addOption("id", "Polling place number", true, true);
         this.addOption("party", "Party name", true,true);
         this.parse(args);
@@ -25,21 +24,21 @@ public class InspectorClient extends Client<InspectorService> implements ClientI
 
 
     public static void main(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
-        InspectorClient inspectorClient = new InspectorClient(args);
-        String pollingPlaceId = inspectorClient.getParameter("id").orElseThrow(IllegalArgumentException::new);
-        String queryPartyName = inspectorClient.getParameter("party").orElseThrow(IllegalArgumentException::new);
+        FiscalClient fiscalClient = new FiscalClient(args);
+        String pollingPlaceId = fiscalClient.getParameter("id").orElseThrow(IllegalArgumentException::new);
+        String queryPartyName = fiscalClient.getParameter("party").orElseThrow(IllegalArgumentException::new);
         Party party = Party.valueOf(queryPartyName);
         /* es necesario que se lo setiemos en el client, no puede ir al server? */
-//        inspectorClient.setParty(party);
-        inspectorClient.register(Long.valueOf(pollingPlaceId), party, inspectorClient);
+//        fiscalClient.setParty(party);
+        fiscalClient.register(Long.valueOf(pollingPlaceId), party, fiscalClient);
     }
 
     public void register(Long pollingPlaceId, Party party, ClientInterface callback) throws RemoteException {
         Objects.requireNonNull(this.remoteService);
-        if(this.remoteService.registerInspector(pollingPlaceId, party, callback) == -1){
+        if(this.remoteService.registerFiscal(pollingPlaceId, party, callback) == -1){
             System.out.println("Aca hay que tirar un error, no se puede registrar");
         }else {
-            System.out.println("number of values in the map " + this.remoteService.registerInspector(pollingPlaceId, party, callback));
+            System.out.println("number of values in the map " + this.remoteService.registerFiscal(pollingPlaceId, party, callback));
             System.out.println("Fiscal of " + callback.getParty() + " registered on polling place " + pollingPlaceId);
         }
     }

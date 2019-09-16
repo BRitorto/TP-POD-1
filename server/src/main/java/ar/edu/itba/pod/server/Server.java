@@ -4,7 +4,6 @@ import ar.edu.itba.pod.*;
 import ar.edu.itba.pod.exceptions.ElectionsNotStartedException;
 import ar.edu.itba.pod.exceptions.EmptyVotesException;
 import ar.edu.itba.pod.model.*;
-import com.sun.webkit.InspectorClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,16 +18,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Server implements AdministrationService, InspectorService, QueryService, VotingService {
+public class Server implements ManagementService, FiscalService, QueryService, VoteService {
     private static Logger logger = LoggerFactory.getLogger(Server.class);
 
     private ElectionStatus electionStatus = ElectionStatus.FINISHED;
     private Map<Long, List<Vote>> allVotes = new ConcurrentHashMap<>();
     // table, fiscal
-    private Map<Long, List<ClientInterface>> inspectors = new ConcurrentHashMap<>();
+    private Map<Long, List<ClientInterface>> fiscals = new ConcurrentHashMap<>();
     private Map<Party, Long> totalVotesByParty = new ConcurrentHashMap<>();
 
-    private long inspector_counter = 0;
+    private long fiscal_counter = 0;
 
     @Override
     public synchronized boolean startElections() throws RemoteException {
@@ -54,32 +53,32 @@ public class Server implements AdministrationService, InspectorService, QuerySer
     }
 
     @Override
-    public long registerInspector(Long table, Party party,  ClientInterface callback) throws RemoteException {
+    public long registerFiscal(Long table, Party party,  ClientInterface callback) throws RemoteException {
         /* IF ELECTIONS HAVE ALL READY STARTED, YOU CAN'T REGISTER ANYONE */
         if(electionStatus != ElectionStatus.FINISHED){
             /* tirar error */
             return -1;
         }
-        long inspector = inspector_counter;
-        callback.setId(inspector);
+        long fiscal = fiscal_counter;
+        callback.setId(fiscal);
         callback.setParty(party);
-        if(this.inspectors.containsKey(table)){
-            this.inspectors.get(table).add(callback);
+        if(this.fiscals.containsKey(table)){
+            this.fiscals.get(table).add(callback);
         }else{
             List<ClientInterface> newList = new ArrayList<>();
-            this.inspectors.put(table, newList);
+            this.fiscals.put(table, newList);
         }
-        inspector_counter++;
-        return this.inspectors.size();
+        fiscal_counter++;
+        return this.fiscals.size();
     }
 
 
 //    @Override
 //              /* No esta dentro de lo pedido */
-//    public boolean unregisterInspector(Long table, ClientInterface callback) throws RemoteException {
-//        if(this.inspectors.containsKey(table)){
-//            if(this.inspectors.get(table).contains(callback)){
-//                this.inspectors.get(table).remove(callback);
+//    public boolean unregisterFiscal(Long table, ClientInterface callback) throws RemoteException {
+//        if(this.fiscals.containsKey(table)){
+//            if(this.fiscals.get(table).contains(callback)){
+//                this.fiscals.get(table).remove(callback);
 //                return true;
 //            }
 //            return false;
@@ -88,9 +87,9 @@ public class Server implements AdministrationService, InspectorService, QuerySer
 //    }
 
 
-    public void notifyInspectors(Vote vote) throws RemoteException {
-        inspectors.entrySet().stream().forEach(inspectorList ->
-                inspectorList.getValue().forEach(inspector -> {
+    public void notifyFiscal(Vote vote) throws RemoteException {
+        fiscals.entrySet().stream().forEach(fiscalList ->
+                fiscalList.getValue().forEach(fiscal -> {
                     vote.getChoices().forEach(choice -> {
                         /* actualizo la cantidad total de votos por partido */
 //                        if(!totalVotesByParty.keySet().contains(choice)) {
@@ -99,8 +98,8 @@ public class Server implements AdministrationService, InspectorService, QuerySer
 //                            totalVotesByParty.put(choice, totalVotesByParty.get(choice) + 1);
 //                        }
                         try {
-                            if(inspector.getParty().equals(choice)) {
-                                inspector.notifyChanges(choice, vote.getTable());
+                            if(fiscal.getParty().equals(choice)) {
+                                fiscal.notifyChanges(choice, vote.getTable());
                             }
                         } catch (RemoteException e) {
                             e.printStackTrace();
@@ -182,7 +181,7 @@ public class Server implements AdministrationService, InspectorService, QuerySer
         votes.forEach(vote -> {
             /* el try catch?... */
             try {
-                notifyInspectors(vote);
+                notifyFiscal(vote);
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
@@ -191,20 +190,20 @@ public class Server implements AdministrationService, InspectorService, QuerySer
     }
 
     public static void main(String[] args) throws RemoteException {
-        logger.info("Voting System Server Starting.");
+        logger.info("Vote System Server Starting.");
 
         final Server servant = new Server();
         final Remote remote = UnicastRemoteObject.exportObject(servant, 0);
         final Registry registry = LocateRegistry.getRegistry();
 
-        logger.info("Rebinding Administration Service");
-        registry.rebind("administration", remote);
-        logger.info("Rebinding Voting Service");
-        registry.rebind("voting", remote);
+        logger.info("Rebinding Management Service");
+        registry.rebind("management", remote);
+        logger.info("Rebinding Vote Service");
+        registry.rebind("vote", remote);
         logger.info("Rebinding Query Service");
         registry.rebind("query", remote);
-        logger.info("Rebinding Inspector Service");
-        registry.rebind("audit", remote);
+        logger.info("Rebinding Fiscal Service");
+        registry.rebind("fiscal", remote);
     }
 
 }

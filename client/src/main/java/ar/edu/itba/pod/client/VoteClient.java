@@ -1,6 +1,6 @@
 package ar.edu.itba.pod.client;
 
-import ar.edu.itba.pod.VotingService;
+import ar.edu.itba.pod.VoteService;
 import ar.edu.itba.pod.model.Party;
 import ar.edu.itba.pod.model.Province;
 import ar.edu.itba.pod.model.Vote;
@@ -19,20 +19,20 @@ import java.rmi.RemoteException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class VotingClient extends Client<VotingService> {
+public class VoteClient extends Client<VoteService> {
 
-    public VotingClient(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
-        super("voting");
+    public VoteClient(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
+        super("vote");
         this.addOption("csvPath", "Path of the input file with votes", true, true);
         this.parse(args);
         this.lookup();
     }
 
     public static void main(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
-        VotingClient votingClient = new VotingClient(args);
-        String votesPath = votingClient.getParameter("csvPath").orElseThrow(IllegalArgumentException::new);
-        List<Vote> votes = votingClient.readCSV(votesPath);
-        votingClient.ballot(votes);
+        VoteClient voteClient = new VoteClient(args);
+        String votesPath = voteClient.getParameter("csvPath").orElseThrow(IllegalArgumentException::new);
+        List<Vote> votes = voteClient.readCSV(votesPath);
+        voteClient.ballot(votes);
         System.out.println(votes.size() + " votes registered");
         //List<Vote> votes = readCSV("/home/bianca/Desktop/eTP-POD/client/src/main/resources/test.csv");
     }

@@ -1,17 +1,15 @@
 package ar.edu.itba.pod.client;
 
-import ar.edu.itba.pod.AdministrationService;
-import ar.edu.itba.pod.model.ElectionStatus;
+import ar.edu.itba.pod.ManagementService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.MalformedURLException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.util.Objects;
 
 
-public class AdministrationClient extends Client<AdministrationService> {
+public class ManagementClient extends Client<ManagementService> {
 
     /*La información de cuál es la acción a realizar se recibe a través de argumentos de línea de
     comando al llamar a la clase del cliente de administración y el resultado se debe imprimir en
@@ -19,8 +17,8 @@ public class AdministrationClient extends Client<AdministrationService> {
 
     private static Logger logger = LoggerFactory.getLogger(Client.class);
 
-    public AdministrationClient(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
-        super("administration");
+    public ManagementClient(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
+        super("management");
         this.addOption("action", "Name of the action to follow", true, true);
         this.parse(args);
         this.lookup();
@@ -62,18 +60,18 @@ public class AdministrationClient extends Client<AdministrationService> {
     }
 
     public static void main(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
-        logger.info("Starting administration client");
+        logger.info("Starting management client");
 
-        final AdministrationClient administrationClient = new AdministrationClient(args);
+        final ManagementClient managementClient = new ManagementClient(args);
 
-        String actionName = administrationClient.getParameter("action").orElseThrow(() -> new IllegalArgumentException("No action name specified"));
+        String actionName = managementClient.getParameter("action").orElseThrow(() -> new IllegalArgumentException("No action name specified"));
 
         if(actionName.equalsIgnoreCase("open")){
-            administrationClient.startElections();
+            managementClient.startElections();
         }else if(actionName.equalsIgnoreCase("state")){
-            administrationClient.getElectionsState();
+            managementClient.getElectionsState();
         }else if(actionName.equalsIgnoreCase("close")){
-            administrationClient.endElections();
+            managementClient.endElections();
         }else {
             throw new IllegalArgumentException("Action name is invalid");
         }

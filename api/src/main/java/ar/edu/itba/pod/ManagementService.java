@@ -6,7 +6,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 
-public interface AdministrationService extends Remote {
+public interface ManagementService extends Remote {
 
     boolean startElections() throws RemoteException;
 

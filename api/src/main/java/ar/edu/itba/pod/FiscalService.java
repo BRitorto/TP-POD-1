@@ -6,11 +6,11 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 
-public interface InspectorService extends Remote {
-    long registerInspector(Long table, Party party, ClientInterface callback) throws RemoteException;
+public interface FiscalService extends Remote {
+    long registerFiscal(Long table, Party party, ClientInterface callback) throws RemoteException;
 
     /* No lo pide el enunciado */
-//    boolean unregisterInspector(Long table, ClientInterface callback) throws RemoteException;
+//    boolean unregisterFiscal(Long table, ClientInterface callback) throws RemoteException;
 
-    void notifyInspectors(Vote vote) throws RemoteException;
+    void notifyFiscal(Vote vote) throws RemoteException;
 }
