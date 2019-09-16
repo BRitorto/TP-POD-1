@@ -15,4 +15,8 @@ public interface ClientInterface extends Remote, Serializable {
     void setId(long id) throws RemoteException;
 
     Party getParty() throws RemoteException;
+
+    void setParty(Party party) throws RemoteException;
+
+
 }

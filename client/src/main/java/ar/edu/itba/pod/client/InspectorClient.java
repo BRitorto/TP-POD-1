@@ -10,11 +10,8 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.Objects;
 
-/**
- * Created by estebankramer on 15/09/2019.
- */
 
-public class InspectorClient extends Client<InspectorService> implements ClientInterface {
+public class InspectorClient extends Client<InspectorService> implements ClientInterface{
     private Long id;
     private Party party;
 
@@ -28,24 +25,26 @@ public class InspectorClient extends Client<InspectorService> implements ClientI
 
 
     public static void main(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
-        InspectorClient InspectorClient = new InspectorClient(args);
-        String pollingPlaceId = InspectorClient.getParameter("id").orElseThrow(IllegalArgumentException::new);
-        String queryPartyName = InspectorClient.getParameter("party").orElseThrow(IllegalArgumentException::new);
+        InspectorClient inspectorClient = new InspectorClient(args);
+        String pollingPlaceId = inspectorClient.getParameter("id").orElseThrow(IllegalArgumentException::new);
+        String queryPartyName = inspectorClient.getParameter("party").orElseThrow(IllegalArgumentException::new);
         Party party = Party.valueOf(queryPartyName);
-        InspectorClient.setParty(party);
-        InspectorClient.register(Long.valueOf(pollingPlaceId), party, InspectorClient);
+        /* es necesario que se lo setiemos en el client, no puede ir al server? */
+//        inspectorClient.setParty(party);
+        inspectorClient.register(Long.valueOf(pollingPlaceId), party, inspectorClient);
     }
 
     public void register(Long pollingPlaceId, Party party, ClientInterface callback) throws RemoteException {
         Objects.requireNonNull(this.remoteService);
-        System.out.println(this.remoteService.registerInspector(pollingPlaceId, party, callback));
+        System.out.println("number of values in the map " + this.remoteService.registerInspector(pollingPlaceId, party, callback));
+        System.out.println("Fiscal of " + callback.getParty() + " registered on polling place " + pollingPlaceId);
     }
 
     public Long getId() {
         return id;
     }
 
-    @Override
+
     public Party getParty() {
         return party;
     }
@@ -54,17 +53,17 @@ public class InspectorClient extends Client<InspectorService> implements ClientI
         this.party = party;
     }
 
-    @Override
+
     public void ping() throws RemoteException {
         System.out.println("this is a ping");
     }
 
-    @Override
+
     public void notifyChanges(Party party, Long table) throws RemoteException {
         System.out.println("New vote for " + party.name() + " on polling place " + table);
     }
 
-    @Override
+
     public void setId(long id) throws RemoteException {
         this.id = id;
     }

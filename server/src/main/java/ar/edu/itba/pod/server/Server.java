@@ -27,6 +27,8 @@ public class Server implements AdministrationService, InspectorService, QuerySer
     private Map<Long, List<ClientInterface>> inspectors = new ConcurrentHashMap<>();
     private Map<Party, Long> totalVotesByParty = new ConcurrentHashMap<>();
 
+    private long inspector_counter = 0;
+
     @Override
     public synchronized boolean startElections() throws RemoteException {
         if (electionStatus.equals(ElectionStatus.FINISHED)) {
@@ -51,8 +53,18 @@ public class Server implements AdministrationService, InspectorService, QuerySer
     }
 
     @Override
-    public long registerInspector(Long table, Party party, ClientInterface callback) throws RemoteException {
-        return 0;
+    public long registerInspector(Long table, Party party,  ClientInterface callback) throws RemoteException {
+        long inspector = inspector_counter;
+        callback.setId(inspector);
+        callback.setParty(party);
+        if(this.inspectors.containsKey(table)){
+            this.inspectors.get(table).add(callback);
+        }else{
+            List<ClientInterface> newList = new ArrayList<>();
+            this.inspectors.put(table, newList);
+        }
+        inspector_counter++;
+        return this.inspectors.size();
     }
 
     @Override
@@ -177,7 +189,7 @@ public class Server implements AdministrationService, InspectorService, QuerySer
         logger.info("Rebinding Query Service");
         registry.rebind("query", remote);
         logger.info("Rebinding Inspector Service");
-        registry.rebind("inspector", remote);
+        registry.rebind("audit", remote);
     }
 
 }
