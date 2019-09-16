@@ -22,8 +22,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Server implements AdministrationService, InspectorService, QueryService, VotingService {
     private static Logger logger = LoggerFactory.getLogger(Server.class);
 
-    private ElectionStatus electionStatus = ElectionStatus.OPEN;
+    private ElectionStatus electionStatus = ElectionStatus.FINISHED;
     private Map<Long, List<Vote>> allVotes = new ConcurrentHashMap<>();
+    // table, fiscal
     private Map<Long, List<ClientInterface>> inspectors = new ConcurrentHashMap<>();
     private Map<Party, Long> totalVotesByParty = new ConcurrentHashMap<>();
 
@@ -54,6 +55,11 @@ public class Server implements AdministrationService, InspectorService, QuerySer
 
     @Override
     public long registerInspector(Long table, Party party,  ClientInterface callback) throws RemoteException {
+        /* IF ELECTIONS HAVE ALL READY STARTED, YOU CAN'T REGISTER ANYONE */
+        if(electionStatus != ElectionStatus.FINISHED){
+            /* tirar error */
+            return -1;
+        }
         long inspector = inspector_counter;
         callback.setId(inspector);
         callback.setParty(party);
@@ -67,10 +73,19 @@ public class Server implements AdministrationService, InspectorService, QuerySer
         return this.inspectors.size();
     }
 
-    @Override
-    public boolean unregisterInspector(Long table, ClientInterface callback) throws RemoteException {
-        return false;
-    }
+
+//    @Override
+//              /* No esta dentro de lo pedido */
+//    public boolean unregisterInspector(Long table, ClientInterface callback) throws RemoteException {
+//        if(this.inspectors.containsKey(table)){
+//            if(this.inspectors.get(table).contains(callback)){
+//                this.inspectors.get(table).remove(callback);
+//                return true;
+//            }
+//            return false;
+//        }
+//        return  false;
+//    }
 
 
     public void notifyInspectors(Vote vote) throws RemoteException {

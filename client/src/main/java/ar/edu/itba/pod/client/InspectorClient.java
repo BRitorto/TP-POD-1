@@ -36,8 +36,12 @@ public class InspectorClient extends Client<InspectorService> implements ClientI
 
     public void register(Long pollingPlaceId, Party party, ClientInterface callback) throws RemoteException {
         Objects.requireNonNull(this.remoteService);
-        System.out.println("number of values in the map " + this.remoteService.registerInspector(pollingPlaceId, party, callback));
-        System.out.println("Fiscal of " + callback.getParty() + " registered on polling place " + pollingPlaceId);
+        if(this.remoteService.registerInspector(pollingPlaceId, party, callback) == -1){
+            System.out.println("Aca hay que tirar un error, no se puede registrar");
+        }else {
+            System.out.println("number of values in the map " + this.remoteService.registerInspector(pollingPlaceId, party, callback));
+            System.out.println("Fiscal of " + callback.getParty() + " registered on polling place " + pollingPlaceId);
+        }
     }
 
     public Long getId() {
