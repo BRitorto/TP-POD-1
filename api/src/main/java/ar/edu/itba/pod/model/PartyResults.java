@@ -1,6 +1,8 @@
 package ar.edu.itba.pod.model;
 
-public class PartyResults {
+import java.io.Serializable;
+
+public class PartyResults implements Serializable {
     private final Party party;
     private double percentage;
 

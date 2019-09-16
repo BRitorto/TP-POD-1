@@ -16,7 +16,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-public class QueryClient extends Client<QueryService> {
+public class QueryClient extends Client<QueryService>{
 
     /* Deberá dejar en archivos CSV los resultados de las consultas realizadas. */
 
@@ -24,7 +24,7 @@ public class QueryClient extends Client<QueryService> {
 
     public QueryClient(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
         super("query");
-        this.addOption("state", "name of the state chose to solve type 2 query", true, false);
+        this.addOption("state", "Name of the state chose to solve type 2 query", true, false);
         this.addOption("id", "Number of the polling place chose to solve type 3 query", true, false);
         this.addOption("outPath", "Path of the output file which contains the query data", true, true);
         this.parse(args);
@@ -32,9 +32,7 @@ public class QueryClient extends Client<QueryService> {
     }
 
     public Collection<PartyResults> queryByTable(long table) throws RemoteException {
-        Collection<PartyResults> p2 = this.remoteService.queryByTable(table);
-        System.out.println(p2);
-        return p2;
+        return this.remoteService.queryByTable(table);
     }
 
     public Collection<PartyResults> queryByProvince(Province province) throws RemoteException {
@@ -71,7 +69,8 @@ public class QueryClient extends Client<QueryService> {
 
             Long pollingPlaceNumber = Long.parseLong(queryClient.getParameter("id").orElseThrow(() -> new IllegalArgumentException("No polling place number specified")));
             //System.out.println(queryClient.queryByTable(pollingPlaceNumber));
-            writeToCSV(fileName, queryClient.queryByTable(pollingPlaceNumber));
+
+           writeToCSV(fileName, queryClient.queryByTable(pollingPlaceNumber));
             return;
         }
 

@@ -4,9 +4,12 @@ import ar.edu.itba.pod.*;
 import ar.edu.itba.pod.exceptions.ElectionsNotStartedException;
 import ar.edu.itba.pod.exceptions.EmptyVotesException;
 import ar.edu.itba.pod.model.*;
+//import com.sun.java.swing.plaf.windows.TMSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
+import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.rmi.Remote;
@@ -15,6 +18,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -22,8 +26,8 @@ public class Server implements ManagementService, FiscalService, QueryService, V
     private static Logger logger = LoggerFactory.getLogger(Server.class);
 
     private ElectionStatus electionStatus = ElectionStatus.FINISHED;
-    // table, votos
-    private Map<Long, List<Vote>> allVotes = new ConcurrentHashMap<>();
+    // table, votos (TODO: eliminar static, lo pongo para probar el conteo de votos en el servidor)
+    private static Map<Long, List<Vote>> allVotes = new ConcurrentHashMap<>();
     // table, fiscal
     private Map<Long, List<ClientInterface>> fiscals = new ConcurrentHashMap<>();
     private Map<Party, Long> totalVotesByParty = new ConcurrentHashMap<>();
@@ -50,14 +54,13 @@ public class Server implements ManagementService, FiscalService, QueryService, V
             this.electionStatus = ElectionStatus.CLOSED;
             return true;
         }
-        return false; // arrojar un error consigna
+        return false;
     }
 
     @Override
     public long registerFiscal(Long table, Party party,  ClientInterface callback) throws RemoteException {
         /* IF ELECTIONS HAVE ALL READY STARTED, YOU CAN'T REGISTER ANYONE */
         if(electionStatus != ElectionStatus.FINISHED){
-            /* tirar error */
             return -1;
         }
         long fiscal = fiscal_counter;
@@ -115,18 +118,23 @@ public class Server implements ManagementService, FiscalService, QueryService, V
     public Collection<PartyResults> queryByTable(long table) throws RemoteException {
 
         Long[] partyVotesCounter = new Long[Party.values().length];
+        Arrays.fill(partyVotesCounter,new Long(0));
         long totalVotes;
 
                 /* tengo el numero de mesa, con eso obtengo el listado de votos que hay
                 en esa mesa */
-        List<Vote> votes = this.allVotes.get(table);
+        List<Vote> votes = new ArrayList<>(this.allVotes.get(table));
 
-        if(votes == null){
+        if(votes.size() == 0){
             /* manejarlo */
             totalVotes = 0;
         }else{
                    /* en cada posicion del array correspondiente al party, voy a colocar la cantidad
                    de votos que vaya sumando*/
+//                   for(Vote v : votes){
+//                       int index = v.getChoices().get(0).ordinal();
+//                       partyVotesCounter[index] = partyVotesCounter[index]+1;
+//                   }
             votes.forEach(p -> partyVotesCounter[p.getChoices().get(0).ordinal()]++);
             totalVotes = votes.size();
         }
@@ -152,8 +160,8 @@ public class Server implements ManagementService, FiscalService, QueryService, V
                 Optional<Long> s = Arrays.asList(partyVotesCounter).stream().max(Long::compare);
                 int index = Arrays.asList(partyVotesCounter).indexOf(s);
 
-
                 PartyResults f = new PartyResults(Party.values()[index], s.get()*100/totalVotes);
+                System.out.println("Party: " + f.getParty() + " Results: " + f.getPercentage());
                 /* TODO: result a collection & RETORNARLO*/
                 return null;
             default:
@@ -236,6 +244,7 @@ public class Server implements ManagementService, FiscalService, QueryService, V
         registry.rebind("query", remote);
         logger.info("Rebinding Fiscal Service");
         registry.rebind("fiscal", remote);
+
     }
 
 }
