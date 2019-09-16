@@ -1,9 +1,9 @@
 package ar.edu.itba.pod.client;
 
+import ar.edu.itba.pod.ClientInterface;
 import ar.edu.itba.pod.QueryService;
 import ar.edu.itba.pod.model.PartyResults;
 import ar.edu.itba.pod.model.Province;
-import org.graalvm.compiler.api.replacements.Snippet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +42,7 @@ public class QueryClient extends Client<QueryService> {
         return this.remoteService.queryByCountry();
     }
 
-    public void main (String[] args) throws RemoteException, NotBoundException, MalformedURLException {
+    public static void main(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
         logger.info("Starting query client");
 
         final QueryClient queryClient = new QueryClient(args);
@@ -58,22 +58,26 @@ public class QueryClient extends Client<QueryService> {
         if(hasStateName) {
             logger.info("has state name");
             String stateName = queryClient.getParameter("stateNumber").orElseThrow(() -> new IllegalArgumentException("No state name specified"));
-            System.out.println(queryClient.queryByProvince(Province.valueOf(stateName)));
+            //System.out.println(queryClient.queryByProvince(Province.valueOf(stateName)));
+            writeToCSV(fileName, queryClient.queryByProvince(Province.valueOf(stateName)));
             return;
         }
 
         if(hasPollingPlaceNumber) {
             logger.info("has polling place number");
+
             Long pollingPlaceNumber = Long.parseLong(queryClient.getParameter("pollingPlaceNumber").orElseThrow(() -> new IllegalArgumentException("No polling place number specified")));
-            System.out.println(queryClient.queryByTable(pollingPlaceNumber));
+            //System.out.println(queryClient.queryByTable(pollingPlaceNumber));
+            writeToCSV(fileName, queryClient.queryByTable(pollingPlaceNumber));
             return;
         }
 
-        System.out.println(queryClient.queryByCountry());
+        //System.out.println(queryClient.queryByCountry());
+        writeToCSV(fileName, queryClient.queryByCountry());
 
     }
 
-    public void writeToCSV(String fileName, List<String> results){
+    public static void writeToCSV(String fileName, Collection<PartyResults> results){
 
         /* Porcentaje;Partido
             33,00%;OWL
@@ -88,8 +92,12 @@ public class QueryClient extends Client<QueryService> {
 
             writer.write("Porcentaje;Partido" + "\n");
 
-            for (String s : results) {
-                writer.write(s + "\n");
+            for (PartyResults p : results) {
+                StringBuilder str = new StringBuilder();
+                str.append(String.format("%.2f", p.getPercentage()));
+                str.append(";");
+                str.append(p.getParty().toString());
+                writer.write(str.toString() + "\n");
             }
 
         } catch (IOException e) {
