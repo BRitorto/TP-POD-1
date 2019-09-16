@@ -8,4 +8,12 @@ public class PartyResults {
         this.party = party;
         this.percentage = percentage;
     }
+
+    public Party getParty() {
+        return party;
+    }
+
+    public double getPercentage() {
+        return percentage;
+    }
 }
