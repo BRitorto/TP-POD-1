@@ -61,7 +61,7 @@ public class Server implements ManagementService, FiscalService, QueryService, V
     public long registerFiscal(Long table, Party party,  ClientInterface callback) throws RemoteException {
         /* IF ELECTIONS HAVE ALL READY STARTED, YOU CAN'T REGISTER ANYONE */
         if(electionStatus != ElectionStatus.FINISHED){
-            return -1;
+            throw new IllegalStateException("All registrations must be done before voting begins");
         }
         long fiscal = fiscal_counter;
         callback.setId(fiscal);
@@ -189,6 +189,57 @@ public class Server implements ManagementService, FiscalService, QueryService, V
 
     @Override
     public Collection<PartyResults> queryByCountry() throws RemoteException {
+
+        /*Long[] partyVotesCounter = new Long[Party.values().length];
+        Party[] myParty = Party.values().clone();
+        Arrays.fill(partyVotesCounter, 0L);
+        long totalVotes = 0;
+
+        //candidatos eliminados
+        List<Party> eliminated = new ArrayList<>();
+        //nro de ronda
+        int roundindex = 0;
+        //cantidad de candidatos restantes
+        int remainingCandidates = Party.values().length;
+        //el de mas votos
+        Optional<Long> s;
+        //el de menos votos
+        Optional<Long> l;
+        int minIndex ;
+        Party lowestCandidate = null;
+
+        do {
+            if(roundindex == 0){
+                for (Long key : allVotes.keySet()) {
+                    for(Vote v : allVotes.get(key)){
+                        int index = v.getChoices().get(roundindex).ordinal();
+                        partyVotesCounter[index] = partyVotesCounter[index]+1;
+                        totalVotes += allVotes.get(key).size();
+                    }
+                }
+            }else {
+                for (Long key : allVotes.keySet()) {
+                    for(Vote v : allVotes.get(key)){
+                        if(v.getChoices().get(roundindex-1).equals(lowestCandidate)){
+                            int index = v.getChoices().get(roundindex).ordinal();
+                            partyVotesCounter[index] = partyVotesCounter[index]+1;
+                        }
+                    }
+                }
+            }
+            roundindex++;
+            s = Arrays.asList(partyVotesCounter).stream().max(Long::compare);
+            l = Arrays.asList(partyVotesCounter).stream().min(Long::compare);
+            minIndex = Arrays.asList(partyVotesCounter).indexOf(l);
+            lowestCandidate = Party.values()[minIndex];
+            Party finalLowestCandidate = lowestCandidate;
+            Arrays.stream(myParty).filter(party -> party.equals(finalLowestCandidate));
+            eliminated.add(Party.values()[minIndex]);
+            partyVotesCounter = new Long[myParty.length];
+            Arrays.fill(partyVotesCounter, 0L);
+        }while((remainingCandidates <= 2) || (s.get() < totalVotes/2));
+         */
+        
         switch(this.electionStatus) {
             case FINISHED:
                 throw new ElectionsNotStartedException("Elections haven't started yet!");
