@@ -158,12 +158,13 @@ public class Server implements ManagementService, FiscalService, QueryService, V
                 /* por lo que yo entiendo me tengo que quedar solo con el ganador de la mesa */
 
                 Optional<Long> s = Arrays.asList(partyVotesCounter).stream().max(Long::compare);
-                int index = Arrays.asList(partyVotesCounter).indexOf(s);
-
+                int index = Arrays.asList(partyVotesCounter).indexOf(s.get());
                 PartyResults f = new PartyResults(Party.values()[index], s.get()*100.0/(double) totalVotes);
-                System.out.println("Party: " + f.getParty() + " Results: " + f.getPercentage());
+
+                PartyResults [] pf = new PartyResults[1];
+                pf[0] = f;
                 /* TODO: result a collection & RETORNARLO*/
-                return null;
+                return Arrays.stream(pf).collect(Collectors.toList());
             default:
                 throw new RuntimeException("Invalid election state.");
         }
