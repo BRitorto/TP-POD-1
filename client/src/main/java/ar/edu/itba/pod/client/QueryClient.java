@@ -2,6 +2,7 @@ package ar.edu.itba.pod.client;
 
 import ar.edu.itba.pod.ClientInterface;
 import ar.edu.itba.pod.QueryService;
+import ar.edu.itba.pod.exceptions.ElectionsNotStartedException;
 import ar.edu.itba.pod.model.PartyResults;
 import ar.edu.itba.pod.model.Province;
 import org.slf4j.Logger;
@@ -32,6 +33,10 @@ public class QueryClient extends Client<QueryService>{
     }
 
     public Collection<PartyResults> queryByTable(long table) throws RemoteException {
+        Collection<PartyResults> pr = this.remoteService.queryByTable(table);
+        if(pr == null){
+            throw new ElectionsNotStartedException("There are no results. Elections haven't started yet");
+        }
         return this.remoteService.queryByTable(table);
     }
 

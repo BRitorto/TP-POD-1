@@ -117,24 +117,20 @@ public class Server implements ManagementService, FiscalService, QueryService, V
     @Override
     public Collection<PartyResults> queryByTable(long table) throws RemoteException {
 
+        if(this.electionStatus == ElectionStatus.FINISHED){
+            return null;
+        }
+
         Long[] partyVotesCounter = new Long[Party.values().length];
         Arrays.fill(partyVotesCounter,new Long(0));
         long totalVotes;
 
-                /* tengo el numero de mesa, con eso obtengo el listado de votos que hay
-                en esa mesa */
-        List<Vote> votes = new ArrayList<>(this.allVotes.get(table));
+        List <Vote> votes = new ArrayList<>(this.allVotes.get(table));
 
         if(votes.size() == 0){
             /* manejarlo */
             totalVotes = 0;
         }else{
-                   /* en cada posicion del array correspondiente al party, voy a colocar la cantidad
-                   de votos que vaya sumando*/
-//                   for(Vote v : votes){
-//                       int index = v.getChoices().get(0).ordinal();
-//                       partyVotesCounter[index] = partyVotesCounter[index]+1;
-//                   }
             votes.forEach(p -> partyVotesCounter[p.getChoices().get(0).ordinal()]++);
             totalVotes = votes.size();
         }
@@ -142,10 +138,11 @@ public class Server implements ManagementService, FiscalService, QueryService, V
 
         switch(this.electionStatus) {
             case FINISHED:
-                throw new ElectionsNotStartedException("Elections haven't started yet!");
+                return null;
+//                throw new ElectionsNotStartedException("Elections haven't started yet!");
 
-            case OPEN: /* siempre FPTP, sin importar que dimension se este consulando, vamos a devolver
-             como van las elecciones hasta el momento, cuantos votos tiene cada partido politico*/
+            case OPEN:
+                /* resultados parciales */
 
                 Collection<PartyResults> parcial =
                         Arrays.stream(Party.values()).
@@ -155,7 +152,7 @@ public class Server implements ManagementService, FiscalService, QueryService, V
                 return parcial;
 
             case CLOSED:
-                /* por lo que yo entiendo me tengo que quedar solo con el ganador de la mesa */
+                /* me quedo con el ganador de la mesa */
 
                 Optional<Long> s = Arrays.asList(partyVotesCounter).stream().max(Long::compare);
                 int index = Arrays.asList(partyVotesCounter).indexOf(s.get());
@@ -163,7 +160,7 @@ public class Server implements ManagementService, FiscalService, QueryService, V
 
                 PartyResults [] pf = new PartyResults[1];
                 pf[0] = f;
-                /* TODO: result a collection & RETORNARLO*/
+
                 return Arrays.stream(pf).collect(Collectors.toList());
             default:
                 throw new RuntimeException("Invalid election state.");
