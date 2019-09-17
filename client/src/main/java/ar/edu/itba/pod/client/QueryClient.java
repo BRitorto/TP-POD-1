@@ -15,7 +15,9 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class QueryClient extends Client<QueryService>{
 
@@ -37,7 +39,9 @@ public class QueryClient extends Client<QueryService>{
         if(pr == null){
             throw new ElectionsNotStartedException("There are no results. Elections haven't started yet");
         }
-        return this.remoteService.queryByTable(table);
+        List<PartyResults> ps = pr.stream().collect(Collectors.toList());
+        ps.sort(Comparator.comparing(PartyResults::getPercentage).reversed().thenComparing(PartyResults::compareTo));
+        return ps;
     }
 
     public Collection<PartyResults> queryByProvince(Province province) throws RemoteException {
@@ -70,11 +74,8 @@ public class QueryClient extends Client<QueryService>{
 
         if(hasPollingPlaceNumber) {
             logger.info("has polling place number");
-
             Long pollingPlaceNumber = Long.parseLong(queryClient.getParameter("id").orElseThrow(() -> new IllegalArgumentException("No polling place number specified")));
-            //System.out.println(queryClient.queryByTable(pollingPlaceNumber));
-
-           writeToCSV(fileName, queryClient.queryByTable(pollingPlaceNumber));
+            writeToCSV(fileName, queryClient.queryByTable(pollingPlaceNumber));
             return;
         }
 

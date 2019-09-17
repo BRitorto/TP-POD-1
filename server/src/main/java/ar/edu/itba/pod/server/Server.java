@@ -139,7 +139,6 @@ public class Server implements ManagementService, FiscalService, QueryService, V
         switch(this.electionStatus) {
             case FINISHED:
                 return null;
-//                throw new ElectionsNotStartedException("Elections haven't started yet!");
 
             case OPEN:
                 /* resultados parciales */
@@ -163,7 +162,7 @@ public class Server implements ManagementService, FiscalService, QueryService, V
 
                 return Arrays.stream(pf).collect(Collectors.toList());
             default:
-                throw new RuntimeException("Invalid election state.");
+                return null;
         }
     }
 
