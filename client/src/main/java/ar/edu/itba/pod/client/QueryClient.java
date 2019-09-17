@@ -59,7 +59,6 @@ public class QueryClient extends Client<QueryService>{
         if(hasStateName) {
             logger.info("has state name");
             String stateName = queryClient.getParameter("state").orElseThrow(() -> new IllegalArgumentException("No state name specified"));
-            //System.out.println(queryClient.queryByProvince(Province.valueOf(stateName)));
             writeToCSV(fileName, queryClient.queryByProvince(Province.valueOf(stateName)));
             return;
         }

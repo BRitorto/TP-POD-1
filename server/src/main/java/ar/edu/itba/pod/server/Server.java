@@ -149,7 +149,7 @@ public class Server implements ManagementService, FiscalService, QueryService, V
 
                 Collection<PartyResults> parcial =
                         Arrays.stream(Party.values()).
-                                map(p -> new PartyResults(p, partyVotesCounter[p.ordinal()]*100/totalVotes)).
+                                map(p -> new PartyResults(p, partyVotesCounter[p.ordinal()]*100.0/(double) totalVotes)).
                                 collect(Collectors.toList());
 
                 return parcial;
@@ -160,7 +160,7 @@ public class Server implements ManagementService, FiscalService, QueryService, V
                 Optional<Long> s = Arrays.asList(partyVotesCounter).stream().max(Long::compare);
                 int index = Arrays.asList(partyVotesCounter).indexOf(s);
 
-                PartyResults f = new PartyResults(Party.values()[index], s.get()*100/totalVotes);
+                PartyResults f = new PartyResults(Party.values()[index], s.get()*100.0/(double) totalVotes);
                 System.out.println("Party: " + f.getParty() + " Results: " + f.getPercentage());
                 /* TODO: result a collection & RETORNARLO*/
                 return null;
