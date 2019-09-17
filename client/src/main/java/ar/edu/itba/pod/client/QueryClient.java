@@ -3,6 +3,7 @@ package ar.edu.itba.pod.client;
 import ar.edu.itba.pod.ClientInterface;
 import ar.edu.itba.pod.QueryService;
 import ar.edu.itba.pod.exceptions.ElectionsNotStartedException;
+import ar.edu.itba.pod.model.ElectionStatus;
 import ar.edu.itba.pod.model.PartyResults;
 import ar.edu.itba.pod.model.Province;
 import org.slf4j.Logger;
@@ -41,6 +42,9 @@ public class QueryClient extends Client<QueryService>{
         }
         List<PartyResults> ps = pr.stream().collect(Collectors.toList());
         ps.sort(Comparator.comparing(PartyResults::getPercentage).reversed().thenComparing(PartyResults::compareTo));
+        if(ps.size() == 1){
+            System.out.println(ps.get(0).getParty() + " won the election");
+        }
         return ps;
     }
 
@@ -91,7 +95,7 @@ public class QueryClient extends Client<QueryService>{
             32,00%;GORILLA
             16,00%;TIGER */
 
-        logger.info("Writing to CSV");
+//        logger.info("Writing to CSV");
 
         try (Writer writer = new BufferedWriter(
                 new OutputStreamWriter(new FileOutputStream(fileName), StandardCharsets.UTF_8)
