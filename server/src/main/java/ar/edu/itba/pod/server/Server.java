@@ -4,30 +4,32 @@ import ar.edu.itba.pod.*;
 import ar.edu.itba.pod.exceptions.ElectionsNotStartedException;
 import ar.edu.itba.pod.exceptions.EmptyVotesException;
 import ar.edu.itba.pod.model.*;
-//import com.sun.java.swing.plaf.windows.TMSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
-import java.io.Serializable;
-import java.lang.reflect.Array;
-import java.lang.reflect.ParameterizedType;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
+
+import static ar.edu.itba.pod.model.ElectionStatus.FINISHED;
+import static ar.edu.itba.pod.model.ElectionStatus.OPEN;
+
+//import com.sun.java.swing.plaf.windows.TMSchema;
 
 public class Server implements ManagementService, FiscalService, QueryService, VoteService {
     private static Logger logger = LoggerFactory.getLogger(Server.class);
 
-    private ElectionStatus electionStatus = ElectionStatus.FINISHED;
+    private ElectionStatus electionStatus = FINISHED;
     // table, votos (TODO: eliminar static, lo pongo para probar el conteo de votos en el servidor)
     private static Map<Long, List<Vote>> allVotes = new ConcurrentHashMap<>();
+    private static Map<Long, List<Vote>> allVotesAux = new ConcurrentHashMap<>();
+
     // table, fiscal
     private Map<Long, List<ClientInterface>> fiscals = new ConcurrentHashMap<>();
     private Map<Party, Long> totalVotesByParty = new ConcurrentHashMap<>();
@@ -36,7 +38,7 @@ public class Server implements ManagementService, FiscalService, QueryService, V
 
     @Override
     public synchronized boolean startElections() throws RemoteException {
-        if (electionStatus.equals(ElectionStatus.FINISHED)) {
+        if (electionStatus.equals(FINISHED)) {
             this.electionStatus = ElectionStatus.OPEN;
             return true;
         }
@@ -60,7 +62,7 @@ public class Server implements ManagementService, FiscalService, QueryService, V
     @Override
     public long registerFiscal(Long table, Party party,  ClientInterface callback) throws RemoteException {
         /* IF ELECTIONS HAVE ALL READY STARTED, YOU CAN'T REGISTER ANYONE */
-        if(electionStatus != ElectionStatus.FINISHED){
+        if(electionStatus != FINISHED){
             throw new IllegalStateException("All registrations must be done before voting begins");
         }
         long fiscal = fiscal_counter;
@@ -117,7 +119,8 @@ public class Server implements ManagementService, FiscalService, QueryService, V
     @Override
     public Collection<PartyResults> queryByTable(long table) throws RemoteException {
 
-        if(this.electionStatus == ElectionStatus.FINISHED){
+        if(this.electionStatus == ElectionStatus.FINISHED || (this.electionStatus!=ElectionStatus.OPEN &&
+                this.electionStatus != ElectionStatus.CLOSED)){
             return null;
         }
 
@@ -135,46 +138,51 @@ public class Server implements ManagementService, FiscalService, QueryService, V
             totalVotes = votes.size();
         }
 
-
-        switch(this.electionStatus) {
-            case FINISHED:
-                return null;
-
-            case OPEN:
-                /* resultados parciales */
-
-                Collection<PartyResults> parcial =
-                        Arrays.stream(Party.values()).
-                                map(p -> new PartyResults(p, partyVotesCounter[p.ordinal()]*100.0/(double) totalVotes)).
-                                collect(Collectors.toList());
-
-                return parcial;
-
-            case CLOSED:
-                /* me quedo con el ganador de la mesa */
-
-                Optional<Long> s = Arrays.asList(partyVotesCounter).stream().max(Long::compare);
-                int index = Arrays.asList(partyVotesCounter).indexOf(s.get());
-                PartyResults f = new PartyResults(Party.values()[index], s.get()*100.0/(double) totalVotes);
-
-                PartyResults [] pf = new PartyResults[1];
-                pf[0] = f;
-
-                return Arrays.stream(pf).collect(Collectors.toList());
-            default:
-                return null;
-        }
+        Collection<PartyResults> parcial =
+                Arrays.stream(Party.values()).
+                        map(p -> new PartyResults(p, partyVotesCounter[p.ordinal()]*100.0/(double) totalVotes)).
+                        collect(Collectors.toList());
+        return parcial;
     }
 
-    @Override
     public Collection<PartyResults> queryByProvince(Province province) throws RemoteException {
+
+        if(this.electionStatus == ElectionStatus.FINISHED){
+            return null;
+        }
+
         switch(this.electionStatus) {
             case FINISHED:
-                throw new ElectionsNotStartedException("Elections haven't started yet!");
+                return null;
+            //throw new ElectionsNotStartedException("Elections haven't started yet!");
 
             case OPEN:
-                // resultdaos parciales
-                return null;
+                /* resultados parciales*/
+
+                long[] partyVotesCounter = new long[Party.values().length];
+                long totalVotes;
+
+                Map<Long, List<Vote>> votes = new HashMap<>(this.allVotes);
+
+                if(votes.size() == 0){
+                    /* manejarlo */
+                    totalVotes = 0;
+                }else{
+
+                    for(Long l : votes.keySet()){
+                        List<Vote> v1 = votes.get(l);
+                        v1.forEach(p -> { if (p.getProvince().equals(province)) partyVotesCounter[p.getChoices().get(0).ordinal()]++;});
+                    }
+
+                    totalVotes = Arrays.stream(partyVotesCounter).sum();
+
+                    Collection<PartyResults> parcial =
+                            Arrays.stream(Party.values()).
+                                    map(p -> new PartyResults(p, partyVotesCounter[p.ordinal()]*100.0/(double) totalVotes)).
+                                    collect(Collectors.toList());
+
+                    return parcial;
+                }
 
             case CLOSED:
                 // resultados finales
@@ -187,69 +195,79 @@ public class Server implements ManagementService, FiscalService, QueryService, V
     @Override
     public Collection<PartyResults> queryByCountry() throws RemoteException {
 
-        /*Long[] partyVotesCounter = new Long[Party.values().length];
-        Party[] myParty = Party.values().clone();
-        Arrays.fill(partyVotesCounter, 0L);
-        long totalVotes = 0;
+        if (this.electionStatus.equals(FINISHED)) {
+            throw new ElectionsNotStartedException("Elections haven't started yet!");
+        }
 
-        //candidatos eliminados
-        List<Party> eliminated = new ArrayList<>();
-        //nro de ronda
-        int roundindex = 0;
-        //cantidad de candidatos restantes
-        int remainingCandidates = Party.values().length;
-        //el de mas votos
-        Optional<Long> s;
-        //el de menos votos
-        Optional<Long> l;
-        int minIndex ;
-        Party lowestCandidate = null;
+        long[] votesByParty = new long[13];
+        for (Long table : allVotes.keySet()) {
+            List<Vote> votes = allVotes.get(table);
+            votes.forEach(vote -> votesByParty[vote.getChoices().get(0).ordinal()]++);
+        }
 
+        long sumVotes = LongStream.of(votesByParty).sum();
+        //if elections open
+//        if (this.electionStatus.equals(OPEN)) {
+//            return getResponse(votesByParty, sumVotes);
+//        }
+        // if elections closed
+        allVotesAux = allVotes;
+        boolean condition = true;
+        long maxVotes = 0;
+        long minVotes = sumVotes;
+        int minParty = 0;
         do {
-            if(roundindex == 0){
-                for (Long key : allVotes.keySet()) {
-                    for(Vote v : allVotes.get(key)){
-                        int index = v.getChoices().get(roundindex).ordinal();
-                        partyVotesCounter[index] = partyVotesCounter[index]+1;
-                        totalVotes += allVotes.get(key).size();
-                    }
+            sumVotes = LongStream.of(votesByParty).sum();
+            for (int i = 0; i < votesByParty.length; i++) {
+                if (votesByParty[i] > maxVotes) {
+                    maxVotes = votesByParty[i];
                 }
-            }else {
-                for (Long key : allVotes.keySet()) {
-                    for(Vote v : allVotes.get(key)){
-                        if(v.getChoices().get(roundindex-1).equals(lowestCandidate)){
-                            int index = v.getChoices().get(roundindex).ordinal();
-                            partyVotesCounter[index] = partyVotesCounter[index]+1;
-                        }
-                    }
+                if (votesByParty[i] < minVotes) {
+                    minVotes = votesByParty[i];
+                    minParty = i;
                 }
             }
-            roundindex++;
-            s = Arrays.asList(partyVotesCounter).stream().max(Long::compare);
-            l = Arrays.asList(partyVotesCounter).stream().min(Long::compare);
-            minIndex = Arrays.asList(partyVotesCounter).indexOf(l);
-            lowestCandidate = Party.values()[minIndex];
-            Party finalLowestCandidate = lowestCandidate;
-            Arrays.stream(myParty).filter(party -> party.equals(finalLowestCandidate));
-            eliminated.add(Party.values()[minIndex]);
-            partyVotesCounter = new Long[myParty.length];
-            Arrays.fill(partyVotesCounter, 0L);
-        }while((remainingCandidates <= 2) || (s.get() < totalVotes/2));
-         */
-        
-        switch(this.electionStatus) {
-            case FINISHED:
-                throw new ElectionsNotStartedException("Elections haven't started yet!");
+            //System.out.println((double) maxVotes/(double) sumVotes);
+            if ((double) maxVotes/(double) sumVotes >= 0.5){
+                condition = false;
+            } else {
+                votesByParty[minParty] = 0;
+                transferVotes(votesByParty, minParty);
+            }
+        } while (condition);
+        return getResponse(votesByParty, sumVotes);
+    }
 
-            case OPEN:
-                // resultdaos parciales
-                return null;
+    @Override
+    public ElectionStatus electionStatus() throws RemoteException {
+        return this.electionStatus;
+    }
 
-            case CLOSED:
-                // resultados finales
-                return null;
-            default:
-                throw new RuntimeException("Invalid election state.");
+    private Collection<PartyResults> getResponse(long[] votesByParty, double sumVotes) {
+        List<PartyResults> response = new ArrayList<>();
+        for (int i = 0; i < votesByParty.length; i++) {
+            response.add(new PartyResults(Party.values()[i], votesByParty[i]*100/ sumVotes));
+        }
+        return response;
+    }
+
+    private void transferVotes(long[] votesByParty, final int party) {
+        for (Long table : allVotesAux.keySet()) {
+            List<Vote> votes = allVotesAux.get(table);
+            votes.forEach(vote -> {
+                List<Party> choices = vote.getChoices();
+                for (int i = 0; i < choices.size(); i++) {
+                    if (choices.get(i).ordinal() == party) {
+                        choices.remove(i);
+                        if (!(choices.size() == 1 || i == 2)) {
+                            votesByParty[choices.get(0).ordinal()]++;
+                            // decidimos que se pierde el voto si era la tercera opcion o si era la unica
+                            // bajar el numero de votes??
+                        }
+                        break;
+                    }
+                }
+            });
         }
     }
 
@@ -278,6 +296,7 @@ public class Server implements ManagementService, FiscalService, QueryService, V
     }
 
     public static void main(String[] args) throws RemoteException {
+
         logger.info("Vote System Server Starting.");
 
         final Server servant = new Server();

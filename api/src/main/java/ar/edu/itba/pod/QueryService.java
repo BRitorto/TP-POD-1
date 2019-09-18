@@ -1,5 +1,6 @@
 package ar.edu.itba.pod;
 
+import ar.edu.itba.pod.model.ElectionStatus;
 import ar.edu.itba.pod.model.PartyResults;
 import ar.edu.itba.pod.model.Province;
 
@@ -15,4 +16,6 @@ public interface QueryService extends Remote {
     Collection<PartyResults> queryByProvince(final Province province) throws RemoteException;
 
     Collection<PartyResults> queryByCountry() throws RemoteException;
+
+    ElectionStatus electionStatus() throws RemoteException;
 }
