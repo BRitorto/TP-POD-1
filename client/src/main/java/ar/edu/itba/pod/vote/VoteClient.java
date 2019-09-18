@@ -1,6 +1,7 @@
-package ar.edu.itba.pod.client;
+package ar.edu.itba.pod.vote;
 
 import ar.edu.itba.pod.VoteService;
+import ar.edu.itba.pod.client.Client;
 import ar.edu.itba.pod.exceptions.ElectionsNotStartedException;
 import ar.edu.itba.pod.exceptions.EmptyVotesException;
 import ar.edu.itba.pod.model.Party;
