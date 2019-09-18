@@ -1,8 +1,8 @@
-package ar.edu.itba.pod.client;
+package ar.edu.itba.pod.fiscal;
 
 import ar.edu.itba.pod.ClientInterface;
 import ar.edu.itba.pod.FiscalService;
-import ar.edu.itba.pod.exceptions.ElectionsEndedException;
+import ar.edu.itba.pod.client.Client;
 import ar.edu.itba.pod.exceptions.ElectionsStartedException;
 import ar.edu.itba.pod.model.Party;
 

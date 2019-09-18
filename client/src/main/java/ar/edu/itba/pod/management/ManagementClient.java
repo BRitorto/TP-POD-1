@@ -1,6 +1,7 @@
-package ar.edu.itba.pod.client;
+package ar.edu.itba.pod.management;
 
 import ar.edu.itba.pod.ManagementService;
+import ar.edu.itba.pod.client.Client;
 import ar.edu.itba.pod.exceptions.ElectionsEndedException;
 import ar.edu.itba.pod.exceptions.ElectionsNotStartedException;
 import org.slf4j.Logger;

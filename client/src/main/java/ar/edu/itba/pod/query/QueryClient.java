@@ -1,9 +1,8 @@
-package ar.edu.itba.pod.client;
+package ar.edu.itba.pod.query;
 
-import ar.edu.itba.pod.ClientInterface;
 import ar.edu.itba.pod.QueryService;
+import ar.edu.itba.pod.client.Client;
 import ar.edu.itba.pod.exceptions.ElectionsNotStartedException;
-import ar.edu.itba.pod.model.ElectionStatus;
 import ar.edu.itba.pod.model.PartyResults;
 import ar.edu.itba.pod.model.Province;
 import org.slf4j.Logger;
@@ -15,12 +14,11 @@ import java.nio.charset.StandardCharsets;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class QueryClient extends Client<QueryService>{
+public class QueryClient extends Client<QueryService> {
 
     /* Deberá dejar en archivos CSV los resultados de las consultas realizadas. */
 

@@ -15,31 +15,29 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 import static ar.edu.itba.pod.model.ElectionStatus.FINISHED;
 import static ar.edu.itba.pod.model.ElectionStatus.OPEN;
 
-//import com.sun.java.swing.plaf.windows.TMSchema;
-
 public class Server implements ManagementService, FiscalService, QueryService, VoteService {
     private static Logger logger = LoggerFactory.getLogger(Server.class);
 
     private ElectionStatus electionStatus = FINISHED;
+
     // table, votos (TODO: eliminar static, lo pongo para probar el conteo de votos en el servidor)
     private static Map<Long, List<Vote>> allVotes = new ConcurrentHashMap<>();
-    private static Map<Long, List<Vote>> allVotesAux = new ConcurrentHashMap<>();
 
     // table, fiscal
     private Map<Long, List<ClientInterface>> fiscals = new ConcurrentHashMap<>();
-    private Map<Party, Long> totalVotesByParty = new ConcurrentHashMap<>();
 
     private long fiscal_counter = 0;
 
     @Override
     public synchronized boolean startElections() throws RemoteException {
         if (electionStatus.equals(FINISHED)) {
-            this.electionStatus = ElectionStatus.OPEN;
+            this.electionStatus = OPEN;
             return true;
         }
         return false;
@@ -52,7 +50,7 @@ public class Server implements ManagementService, FiscalService, QueryService, V
 
     @Override
     public synchronized boolean endElections() throws RemoteException {
-        if (electionStatus.equals(ElectionStatus.OPEN) || electionStatus.equals(ElectionStatus.CLOSED)) {
+        if (electionStatus.equals(OPEN) || electionStatus.equals(ElectionStatus.CLOSED)) {
             this.electionStatus = ElectionStatus.CLOSED;
             return true;
         }
@@ -119,7 +117,7 @@ public class Server implements ManagementService, FiscalService, QueryService, V
     @Override
     public Collection<PartyResults> queryByTable(long table) throws RemoteException {
 
-        if(this.electionStatus == ElectionStatus.FINISHED || (this.electionStatus!=ElectionStatus.OPEN &&
+        if(this.electionStatus == ElectionStatus.FINISHED || (this.electionStatus!= OPEN &&
                 this.electionStatus != ElectionStatus.CLOSED)){
             return null;
         }
@@ -199,43 +197,43 @@ public class Server implements ManagementService, FiscalService, QueryService, V
             throw new ElectionsNotStartedException("Elections haven't started yet!");
         }
 
-        long[] votesByParty = new long[13];
-        for (Long table : allVotes.keySet()) {
-            List<Vote> votes = allVotes.get(table);
-            votes.forEach(vote -> votesByParty[vote.getChoices().get(0).ordinal()]++);
+        ArrayList<LinkedList<Vote>> votesByParty = new ArrayList<>();
+        Arrays.stream(Party.values()).forEach(p -> votesByParty.add(new LinkedList<>()));
+        allVotes.forEach((k, l) -> l.forEach(v ->
+                votesByParty.get(v.getChoices().get(0).ordinal()).add(v)));
+
+        if (this.electionStatus.equals(OPEN)) {
+            final long[] sumVotes = {0};
+            votesByParty.stream().filter(Objects::nonNull).forEach(partyVotes -> {
+                sumVotes[0] += partyVotes.size();
+            });
+            return getResponse(votesByParty, sumVotes[0]);
         }
 
-        long sumVotes = LongStream.of(votesByParty).sum();
-        //if elections open
-//        if (this.electionStatus.equals(OPEN)) {
-//            return getResponse(votesByParty, sumVotes);
-//        }
-        // if elections closed
-        allVotesAux = allVotes;
-        boolean condition = true;
-        long maxVotes = 0;
-        long minVotes = sumVotes;
-        int minParty = 0;
-        do {
-            sumVotes = LongStream.of(votesByParty).sum();
-            for (int i = 0; i < votesByParty.length; i++) {
-                if (votesByParty[i] > maxVotes) {
-                    maxVotes = votesByParty[i];
+        while(true) {
+            final long[] sumVotes = {0};
+            final int[] maxParty = {0};
+            final int[] minParty = {0};
+            votesByParty.stream().filter(Objects::nonNull).forEach(partyVotes -> {
+                sumVotes[0] += partyVotes.size();
+                if (votesByParty.get(maxParty[0]) == null && partyVotes.size() > votesByParty.get(maxParty[0]).size()) {
+                    maxParty[0] = votesByParty.indexOf(partyVotes);
+                    if (votesByParty.get(minParty[0]) == null && votesByParty.get(minParty[0]).size() == 0) {
+                        minParty[0] = maxParty[0];
+                    }
                 }
-                if (votesByParty[i] < minVotes) {
-                    minVotes = votesByParty[i];
-                    minParty = i;
+                if (votesByParty.get(minParty[0]) != null && (partyVotes.size() < votesByParty.get(minParty[0]).size() && partyVotes.size() != 0)) {
+                    minParty[0] = votesByParty.indexOf(partyVotes);
                 }
-            }
-            //System.out.println((double) maxVotes/(double) sumVotes);
-            if ((double) maxVotes/(double) sumVotes >= 0.5){
-                condition = false;
+            });
+
+            if ((double) maxParty[0]/(double) sumVotes[0] >= 0.5 || votesByParty.get(maxParty[0]).size() ==
+                    votesByParty.get(minParty[0]).size()){
+                return getResponse(votesByParty, sumVotes[0]);
             } else {
-                votesByParty[minParty] = 0;
-                transferVotes(votesByParty, minParty);
+                transferVotes(votesByParty, minParty[0]);
             }
-        } while (condition);
-        return getResponse(votesByParty, sumVotes);
+        }
     }
 
     @Override
@@ -243,37 +241,40 @@ public class Server implements ManagementService, FiscalService, QueryService, V
         return this.electionStatus;
     }
 
-    private Collection<PartyResults> getResponse(long[] votesByParty, double sumVotes) {
+
+    private Collection<PartyResults> getResponse(ArrayList<LinkedList<Vote>> votesByParty, double sumVotes) {
+        long [] answer = new long[13];
+        IntStream.range(0, votesByParty.size()).forEach(i -> {
+            if (votesByParty.get(i) == null) {
+                answer[i] = 0;
+            } else {
+                answer[i] = votesByParty.get(i).size();
+            }
+        });
         List<PartyResults> response = new ArrayList<>();
-        for (int i = 0; i < votesByParty.length; i++) {
-            response.add(new PartyResults(Party.values()[i], votesByParty[i]*100/ sumVotes));
+        for (int i = 0; i < answer.length; i++) {
+            response.add(new PartyResults(Party.values()[i], answer[i]*100/ sumVotes));
         }
         return response;
     }
 
-    private void transferVotes(long[] votesByParty, final int party) {
-        for (Long table : allVotesAux.keySet()) {
-            List<Vote> votes = allVotesAux.get(table);
-            votes.forEach(vote -> {
-                List<Party> choices = vote.getChoices();
-                for (int i = 0; i < choices.size(); i++) {
-                    if (choices.get(i).ordinal() == party) {
-                        choices.remove(i);
-                        if (!(choices.size() == 1 || i == 2)) {
-                            votesByParty[choices.get(0).ordinal()]++;
-                            // decidimos que se pierde el voto si era la tercera opcion o si era la unica
-                            // bajar el numero de votes??
-                        }
-                        break;
+    private void transferVotes(final ArrayList<LinkedList<Vote>> votesByParty, final int party) {
+        if (!votesByParty.get(party).isEmpty()) {
+            for (Vote vote : votesByParty.get(party)) {
+                if (vote.getChoices().size() > 0) {
+                    vote.getChoices().remove(0);
+                    if (votesByParty.get(vote.getChoices().get(0).ordinal()) != null) {
+                        votesByParty.get(vote.getChoices().get(0).ordinal()).add(vote);
                     }
                 }
-            });
+            }
         }
+        votesByParty.set(party, null);
     }
 
     @Override
     public int ballot(Collection<Vote> votes) throws RemoteException, ElectionsNotStartedException, EmptyVotesException {
-        if (!this.electionStatus.equals(ElectionStatus.OPEN)) {
+        if (!this.electionStatus.equals(OPEN)) {
             return -1;
 //            throw new ElectionsNotStartedException("Elections haven't started yet!");
         }
