@@ -3,6 +3,7 @@ package ar.edu.itba.pod.query;
 import ar.edu.itba.pod.QueryService;
 import ar.edu.itba.pod.client.Client;
 import ar.edu.itba.pod.exceptions.ElectionsNotStartedException;
+import ar.edu.itba.pod.model.ElectionStatus;
 import ar.edu.itba.pod.model.PartyResults;
 import ar.edu.itba.pod.model.Province;
 import org.slf4j.Logger;
@@ -19,9 +20,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class QueryClient extends Client<QueryService> {
-
-    /* Deberá dejar en archivos CSV los resultados de las consultas realizadas. */
-
     private static Logger logger = LoggerFactory.getLogger(Client.class);
 
     public QueryClient(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
@@ -35,23 +33,29 @@ public class QueryClient extends Client<QueryService> {
 
     public Collection<PartyResults> queryByTable(long table) throws RemoteException {
         Collection<PartyResults> pr = this.remoteService.queryByTable(table);
-        if(pr == null){
+        return processResults(pr);
+    }
+
+    public Collection<PartyResults> queryByProvince(Province province) throws RemoteException {
+        Collection<PartyResults> pr = this.remoteService.queryByProvince(province);
+        return processResults(pr);
+    }
+
+    public Collection<PartyResults> queryByCountry() throws RemoteException {
+        Collection<PartyResults> pr = this.remoteService.queryByCountry();
+        return processResults(pr);
+    }
+
+    private Collection<PartyResults> processResults(Collection<PartyResults> pr) throws RemoteException {
+        if (this.remoteService.electionStatus().equals(ElectionStatus.FINISHED)) {
             throw new ElectionsNotStartedException("There are no results. Elections haven't started yet");
         }
         List<PartyResults> ps = pr.stream().collect(Collectors.toList());
         ps.sort(Comparator.comparing(PartyResults::getPercentage).reversed().thenComparing(PartyResults::compareTo));
-        if(ps.size() == 1){
+        if (this.remoteService.electionStatus().equals(ElectionStatus.CLOSED)) {
             System.out.println(ps.get(0).getParty() + " won the election");
         }
         return ps;
-    }
-
-    public Collection<PartyResults> queryByProvince(Province province) throws RemoteException {
-        return this.remoteService.queryByProvince(province);
-    }
-
-    public Collection<PartyResults> queryByCountry() throws RemoteException {
-        return this.remoteService.queryByCountry();
     }
 
     public static void main(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
@@ -62,7 +66,7 @@ public class QueryClient extends Client<QueryService> {
         boolean hasPollingPlaceNumber = queryClient.hasParameter("id");
 
         if(hasPollingPlaceNumber && hasStateName) {
-            throw new IllegalArgumentException("Exactly 1 or none parameter required !");
+            throw new IllegalArgumentException("Exactly 1 or none parameter required!");
         }
 
         String fileName = queryClient.getParameter("outPath").orElseThrow(() -> new IllegalArgumentException("No file name specified"));
@@ -80,25 +84,14 @@ public class QueryClient extends Client<QueryService> {
             writeToCSV(fileName, queryClient.queryByTable(pollingPlaceNumber));
             return;
         }
-
-        //System.out.println(queryClient.queryByCountry());
         writeToCSV(fileName, queryClient.queryByCountry());
-
     }
 
     public static void writeToCSV(String fileName, Collection<PartyResults> results){
 
-        /* Porcentaje;Partido
-            33,00%;OWL
-            32,00%;GORILLA
-            16,00%;TIGER */
-
-//        logger.info("Writing to CSV");
-
         try (Writer writer = new BufferedWriter(
                 new OutputStreamWriter(new FileOutputStream(fileName), StandardCharsets.UTF_8)
         )) {
-
             writer.write("Porcentaje;Partido" + "\n");
 
             for (PartyResults p : results) {
@@ -112,7 +105,5 @@ public class QueryClient extends Client<QueryService> {
         } catch (IOException e) {
             System.err.format("IOException: %s%n", e);
         }
-
     }
-
 }

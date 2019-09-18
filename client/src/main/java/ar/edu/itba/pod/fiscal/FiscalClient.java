@@ -24,14 +24,11 @@ public class FiscalClient extends Client<FiscalService> implements ClientInterfa
         this.lookup();
     }
 
-
     public static void main(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
         FiscalClient fiscalClient = new FiscalClient(args);
         String pollingPlaceId = fiscalClient.getParameter("id").orElseThrow(IllegalArgumentException::new);
         String queryPartyName = fiscalClient.getParameter("party").orElseThrow(IllegalArgumentException::new);
         Party party = Party.valueOf(queryPartyName);
-        /* es necesario que se lo setiemos en el client, no puede ir al server? */
-//        fiscalClient.setParty(party);
         fiscalClient.register(Long.valueOf(pollingPlaceId), party, fiscalClient);
     }
 
@@ -50,7 +47,6 @@ public class FiscalClient extends Client<FiscalService> implements ClientInterfa
         return id;
     }
 
-
     public Party getParty() {
         return party;
     }
@@ -59,16 +55,13 @@ public class FiscalClient extends Client<FiscalService> implements ClientInterfa
         this.party = party;
     }
 
-
     public void ping() throws RemoteException {
         System.out.println("This is a ping");
     }
 
-
     public void notifyChanges(Party party, Long table) throws RemoteException {
         System.out.println("New vote for " + party.name() + " on polling place " + table);
     }
-
 
     public void setId(long id) throws RemoteException {
         this.id = id;
@@ -78,7 +71,6 @@ public class FiscalClient extends Client<FiscalService> implements ClientInterfa
     public boolean equals(Object other) {
         if (this == other) return true;
         if (other == null || this.getClass() != other.getClass()) return false;
-
         return true;
     }
 

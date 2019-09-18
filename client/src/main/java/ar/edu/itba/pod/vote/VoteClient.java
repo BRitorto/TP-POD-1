@@ -73,12 +73,4 @@ public class VoteClient extends Client<VoteService> {
             return null;
         }
     }
-
-    public static void writeCSV(final String path) {
-        try {
-            FileWriter out = new FileWriter("book_new.csv");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }

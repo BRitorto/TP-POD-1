@@ -11,12 +11,7 @@ import java.net.MalformedURLException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
-
 public class ManagementClient extends Client<ManagementService> {
-
-    /*La información de cuál es la acción a realizar se recibe a través de argumentos de línea de
-    comando al llamar a la clase del cliente de administración y el resultado se debe imprimir en
-    pantalla.*/
 
     private static Logger logger = LoggerFactory.getLogger(Client.class);
 
@@ -26,7 +21,6 @@ public class ManagementClient extends Client<ManagementService> {
         this.parse(args);
         this.lookup();
     }
-
 
     public boolean startElections() throws RemoteException, ElectionsEndedException {
         boolean open = this.remoteService.startElections();
@@ -44,7 +38,6 @@ public class ManagementClient extends Client<ManagementService> {
         return this.remoteService.getElectionsState();
     }
 
-
     public boolean endElections() throws RemoteException, ElectionsNotStartedException {
         boolean close = this.remoteService.endElections();
         if(!close){
@@ -55,25 +48,9 @@ public class ManagementClient extends Client<ManagementService> {
         return close;
     }
 
-    private static enum actionType {
-        /* abre los comicios */
-        OPEN,
-        /* consulta el estado de los comicios*/
-        STATE,
-        /* cierra los comicios*/
-        CLOSE;
-
-        @Override
-        public String toString() {
-            return this.name().toLowerCase();
-        }
-    }
-
     public static void main(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
         logger.info("Starting management client");
-
         final ManagementClient managementClient = new ManagementClient(args);
-
         String actionName = managementClient.getParameter("action").orElseThrow(() -> new IllegalArgumentException("No action name specified"));
 
         if(actionName.equalsIgnoreCase("open")){
@@ -85,8 +62,5 @@ public class ManagementClient extends Client<ManagementService> {
         }else {
             throw new IllegalArgumentException("Action name is invalid");
         }
-
     }
-
-
 }
