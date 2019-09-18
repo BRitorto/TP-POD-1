@@ -37,12 +37,12 @@ public class QueryClient extends Client<QueryService>{
 
     public Collection<PartyResults> queryByTable(long table) throws RemoteException {
         Collection<PartyResults> pr = this.remoteService.queryByTable(table);
-        if(pr == null){
+        if(this.remoteService.electionStatus().equals(ElectionStatus.FINISHED)){
             throw new ElectionsNotStartedException("There are no results. Elections haven't started yet");
         }
         List<PartyResults> ps = pr.stream().collect(Collectors.toList());
         ps.sort(Comparator.comparing(PartyResults::getPercentage).reversed().thenComparing(PartyResults::compareTo));
-        if(ps.size() == 1){
+        if(this.remoteService.electionStatus().equals(ElectionStatus.CLOSED)){
             System.out.println(ps.get(0).getParty() + " won the election");
         }
         return ps;
@@ -89,7 +89,6 @@ public class QueryClient extends Client<QueryService>{
             return;
         }
 
-        //System.out.println(queryClient.queryByCountry());
         writeToCSV(fileName, queryClient.queryByCountry());
 
     }

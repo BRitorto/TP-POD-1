@@ -21,7 +21,7 @@ public class Server implements ManagementService, FiscalService, QueryService, V
     private static Logger logger = LoggerFactory.getLogger(Server.class);
 
     private ElectionStatus electionStatus = ElectionStatus.FINISHED;
-    // table, votos
+    // table, votes
     private Map<Long, List<Vote>> allVotes = new ConcurrentHashMap<>();
     // table, fiscal
     private Map<Long, List<ClientInterface>> fiscals = new ConcurrentHashMap<>();
@@ -42,6 +42,8 @@ public class Server implements ManagementService, FiscalService, QueryService, V
     public String getElectionsState() throws RemoteException {
         return this.electionStatus.getStatusDescription();
     }
+
+
 
     @Override
     public synchronized boolean endElections() throws RemoteException {
@@ -112,7 +114,8 @@ public class Server implements ManagementService, FiscalService, QueryService, V
     @Override
     public Collection<PartyResults> queryByTable(long table) throws RemoteException {
 
-        if(this.electionStatus == ElectionStatus.FINISHED){
+        if(this.electionStatus == ElectionStatus.FINISHED || (this.electionStatus!=ElectionStatus.OPEN &&
+                this.electionStatus != ElectionStatus.CLOSED)){
             return null;
         }
 
@@ -130,35 +133,12 @@ public class Server implements ManagementService, FiscalService, QueryService, V
             totalVotes = votes.size();
         }
 
+        Collection<PartyResults> parcial =
+                Arrays.stream(Party.values()).
+                        map(p -> new PartyResults(p, partyVotesCounter[p.ordinal()]*100.0/(double) totalVotes)).
+                        collect(Collectors.toList());
 
-        switch(this.electionStatus) {
-            case FINISHED:
-                return null;
-
-            case OPEN:
-                /* resultados parciales */
-
-                Collection<PartyResults> parcial =
-                        Arrays.stream(Party.values()).
-                                map(p -> new PartyResults(p, partyVotesCounter[p.ordinal()]*100.0/(double) totalVotes)).
-                                collect(Collectors.toList());
-
-                return parcial;
-
-            case CLOSED:
-                /* me quedo con el ganador de la mesa */
-
-                Optional<Long> s = Arrays.asList(partyVotesCounter).stream().max(Long::compare);
-                int index = Arrays.asList(partyVotesCounter).indexOf(s.get());
-                PartyResults f = new PartyResults(Party.values()[index], s.get()*100.0/(double) totalVotes);
-
-                PartyResults [] pf = new PartyResults[1];
-                pf[0] = f;
-
-                return Arrays.stream(pf).collect(Collectors.toList());
-            default:
-                return null;
-        }
+        return parcial;
     }
 
     @Override
@@ -168,7 +148,6 @@ public class Server implements ManagementService, FiscalService, QueryService, V
         if(this.electionStatus == ElectionStatus.FINISHED){
             return null;
         }
-
 
         switch(this.electionStatus) {
             case FINISHED:
@@ -203,7 +182,6 @@ public class Server implements ManagementService, FiscalService, QueryService, V
 
                     return parcial;
                 }
-
 
             case CLOSED:
                 // resultados finales
@@ -280,6 +258,11 @@ public class Server implements ManagementService, FiscalService, QueryService, V
             default:
                 throw new RuntimeException("Invalid election state.");
         }
+    }
+
+    @Override
+    public ElectionStatus electionStatus() throws RemoteException {
+        return this.electionStatus;
     }
 
     @Override
