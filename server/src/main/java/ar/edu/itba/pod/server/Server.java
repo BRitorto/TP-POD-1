@@ -4,14 +4,9 @@ import ar.edu.itba.pod.*;
 import ar.edu.itba.pod.exceptions.ElectionsNotStartedException;
 import ar.edu.itba.pod.exceptions.EmptyVotesException;
 import ar.edu.itba.pod.model.*;
-//import com.sun.java.swing.plaf.windows.TMSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
-import java.io.Serializable;
-import java.lang.reflect.Array;
-import java.lang.reflect.ParameterizedType;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -26,8 +21,8 @@ public class Server implements ManagementService, FiscalService, QueryService, V
     private static Logger logger = LoggerFactory.getLogger(Server.class);
 
     private ElectionStatus electionStatus = ElectionStatus.FINISHED;
-    // table, votos (TODO: eliminar static, lo pongo para probar el conteo de votos en el servidor)
-    private static Map<Long, List<Vote>> allVotes = new ConcurrentHashMap<>();
+    // table, votos
+    private Map<Long, List<Vote>> allVotes = new ConcurrentHashMap<>();
     // table, fiscal
     private Map<Long, List<ClientInterface>> fiscals = new ConcurrentHashMap<>();
     private Map<Party, Long> totalVotesByParty = new ConcurrentHashMap<>();
@@ -167,14 +162,48 @@ public class Server implements ManagementService, FiscalService, QueryService, V
     }
 
     @Override
+    /* each candidate needs 20% to win */
     public Collection<PartyResults> queryByProvince(Province province) throws RemoteException {
+
+        if(this.electionStatus == ElectionStatus.FINISHED){
+            return null;
+        }
+
+
         switch(this.electionStatus) {
             case FINISHED:
-                throw new ElectionsNotStartedException("Elections haven't started yet!");
+                return null;
+                //throw new ElectionsNotStartedException("Elections haven't started yet!");
 
             case OPEN:
-                // resultdaos parciales
-                return null;
+                /* resultados parciales*/
+
+                long[] partyVotesCounter = new long[Party.values().length];
+//                Arrays.fill(partyVotesCounter,new Long(0));
+                long totalVotes;
+
+                Map<Long, List<Vote>> votes = new HashMap<>(this.allVotes);
+
+                if(votes.size() == 0){
+                    /* manejarlo */
+                    totalVotes = 0;
+                }else{
+
+                    for(Long l : votes.keySet()){
+                        List<Vote> v1 = votes.get(l);
+                        v1.forEach(p -> { if (p.getProvince().equals(province)) partyVotesCounter[p.getChoices().get(0).ordinal()]++;});
+                    }
+
+                    totalVotes = Arrays.stream(partyVotesCounter).sum();
+
+                    Collection<PartyResults> parcial =
+                            Arrays.stream(Party.values()).
+                                    map(p -> new PartyResults(p, partyVotesCounter[p.ordinal()]*100.0/(double) totalVotes)).
+                                    collect(Collectors.toList());
+
+                    return parcial;
+                }
+
 
             case CLOSED:
                 // resultados finales

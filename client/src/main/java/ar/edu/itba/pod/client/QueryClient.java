@@ -49,7 +49,13 @@ public class QueryClient extends Client<QueryService>{
     }
 
     public Collection<PartyResults> queryByProvince(Province province) throws RemoteException {
-        return this.remoteService.queryByProvince(province);
+        Collection<PartyResults> pr = this.remoteService.queryByProvince(province);
+        if(pr == null){
+            throw new ElectionsNotStartedException("There are no results. Elections haven't started yet");
+        }
+        List<PartyResults> ps = pr.stream().collect(Collectors.toList());
+        ps.sort(Comparator.comparing(PartyResults::getPercentage).reversed().thenComparing(PartyResults::compareTo));
+        return ps;
     }
 
     public Collection<PartyResults> queryByCountry() throws RemoteException {
