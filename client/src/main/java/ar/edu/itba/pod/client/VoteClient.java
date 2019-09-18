@@ -60,9 +60,9 @@ public class VoteClient extends Client<VoteService> {
                 String provinceString = csvRecord.get(1);
                 String choices = csvRecord.get(2);
                 List<String> choicesList = Arrays.asList(choices.split(","));
-                List<Party> partyList = choicesList.stream()
+                LinkedList<Party> partyList = choicesList.stream()
                         .map(Party::valueOf)
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toCollection(LinkedList::new));
                 votes.add(new Vote(table, Province.valueOf(provinceString), partyList));
             }
             return votes;
