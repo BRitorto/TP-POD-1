@@ -51,7 +51,7 @@ public class ManagementClient extends Client<ManagementService> {
     public static void main(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
         logger.info("Starting management client");
         final ManagementClient managementClient = new ManagementClient(args);
-        String actionName = managementClient.getParameter("action").orElseThrow(() -> new IllegalArgumentException("No action name specified"));
+        String actionName = managementClient.getParameter("actionName").orElseThrow(() -> new IllegalArgumentException("No action name specified"));
 
         if(actionName.equalsIgnoreCase("open")){
             managementClient.startElections();
