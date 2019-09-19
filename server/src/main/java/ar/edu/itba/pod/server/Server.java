@@ -143,16 +143,18 @@ public class Server implements ManagementService, FiscalService, QueryService, V
         return parcial;
     }
 
+    @Override
+    /* each candidate needs 20% to win */
     public Collection<PartyResults> queryByProvince(Province province) throws RemoteException {
 
-        if(this.electionStatus == ElectionStatus.FINISHED){
+        if(this.electionStatus == ElectionStatus.FINISHED || (this.electionStatus!=ElectionStatus.OPEN &&
+                this.electionStatus != ElectionStatus.CLOSED)){
             return null;
         }
 
         switch(this.electionStatus) {
             case FINISHED:
                 return null;
-            //throw new ElectionsNotStartedException("Elections haven't started yet!");
 
             case OPEN:
                 /* resultados parciales*/
@@ -184,9 +186,13 @@ public class Server implements ManagementService, FiscalService, QueryService, V
 
             case CLOSED:
                 // resultados finales
-                return null;
+                STV stv = new STV();
+                Collection<PartyResults> ret = stv.STVQuery(allVotes, province);
+
+                System.out.println(ret.size());
+                return ret;
             default:
-                throw new RuntimeException("Invalid election state.");
+                return null;
         }
     }
 
