@@ -17,7 +17,7 @@ public class ManagementClient extends Client<ManagementService> {
 
     public ManagementClient(String[] args) throws RemoteException, NotBoundException, MalformedURLException {
         super("management");
-        this.addOption("action", "Name of the action to follow", true, true);
+        this.addOption("actionName", "Name of the action to follow", true, true);
         this.parse(args);
         this.lookup();
     }
