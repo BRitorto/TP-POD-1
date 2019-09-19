@@ -35,7 +35,7 @@ Para correr cada client se tiene que parar en la carpeta descomprimida dentro de
 
 ### Management client:
 
-    $./run-management.sh serverAddress={ip}:{port} -action={action}
+    $./run-management.sh serverAddress={ip}:{port} -actionName={action}
 
 ip: 127.0.0.1
 
