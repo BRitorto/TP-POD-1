@@ -33,7 +33,7 @@ Y en otra:
 Para correr cada client se tiene que parar en la carpeta descomprimida dentro de:
 /client/target/rmi-client-1.0-SNAPSHOT 
 
-##Management client:
+### Management client:
 
     $./run-management {ip} {port} {action}
 
@@ -43,7 +43,7 @@ puerto: 0
 
 action: open | state | close
 
-##Voting client:
+### Voting client:
 
     $./run-vote {ip} {port} {filepath}
 
@@ -53,7 +53,7 @@ puerto: 0
 
 filepath: debe ser el filepath absoluto de donde cargar el archivo .csv con los votos
 
-##Fiscal client:
+### Fiscal client:
 
     $./run-fiscal {ip} {port} {id} {party}
 
@@ -65,7 +65,7 @@ id: el id de la mesa en la que se registra el fiscal
 
 party: el partido del fiscal
 
-##Query client:
+### Query client:
 
     $./run-query {ip} {port} {state} {id} {filepath}
 
