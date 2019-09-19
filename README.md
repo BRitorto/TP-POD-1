@@ -35,7 +35,7 @@ Para correr cada client se tiene que parar en la carpeta descomprimida dentro de
 
 ### Management client:
 
-    $./run-management.sh serverAddress={ip}:{port} -actionName={action}
+    $./run-management.sh -serverAddress={ip}:{port} -actionName={action}
 
 ip: 127.0.0.1
 
@@ -45,7 +45,7 @@ action: open | state | close
 
 ### Voting client:
 
-    $./run-vote.sh serverAddress={ip}:{port} -votesPath={filepath}
+    $./run-vote.sh -serverAddress={ip}:{port} -votesPath={filepath}
 
 ip: 127.0.0.1
 
@@ -73,17 +73,17 @@ ip: 127.0.0.1
 
 puerto: 0
 
-state: si se quiere consultar el estado de la votación por estado se debe escribir el nombre del estado. IMPORTANTE: si no se usa esta variable, escribir un 0
+state: si se quiere consultar el estado de la votación por estado se debe escribir el nombre del estado.
 
-id: si en cambio se quiere consultar el estado de la votación por mesa, se debe escribir el id de lla. IMPORTANTE: si no se usa esta variable, escribir un 0.
+id: si en cambio se quiere consultar el estado de la votación por mesa, se debe escribir el id de lla. 
 
-**Si se dejan ambos id y state con 0, se consulta el estado de la votación nacional**
+**Si no se completa el id y state, se consulta el estado de la votación nacional**
 
 party: el partido del fiscal
 
 Ejemplo:
 
-    $./run-query.sh 127.0.1 0 0 0 ./result.csv
+    $./run-query.sh -serverAddress=127.0.0.1 -outPath=./result.csv
 
 # Integrantes
   - Martina Scomazzon
