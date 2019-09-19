@@ -1,4 +1,4 @@
 #!/bin/bash
 
-java -cp 'lib/jars/*' "ar.edu.itba.pod.management.ManagementClient" $*
+java -DserverAddress=$1:$2 -Daction=$3 -cp 'lib/jars/*' "ar.edu.itba.pod.management.ManagementClient" $*
 
