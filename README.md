@@ -35,7 +35,7 @@ Para correr cada client se tiene que parar en la carpeta descomprimida dentro de
 
 ### Management client:
 
-    $./run-management {ip} {port} {action}
+    $./run-management.sh serverAddress={ip}:{port} -action={action}
 
 ip: 127.0.0.1
 
@@ -45,7 +45,7 @@ action: open | state | close
 
 ### Voting client:
 
-    $./run-vote {ip} {port} {filepath}
+    $./run-vote.sh serverAddress={ip}:{port} -votesPath={filepath}
 
 ip: 127.0.0.1
 
@@ -55,7 +55,7 @@ filepath: debe ser el filepath absoluto de donde cargar el archivo .csv con los 
 
 ### Fiscal client:
 
-    $./run-fiscal {ip} {port} {id} {party}
+    $./run-fiscal.sh -serverAddress={ip}:{port} -id{id} -party={party}
 
 ip: 127.0.0.1
 
@@ -67,7 +67,7 @@ party: el partido del fiscal
 
 ### Query client:
 
-    $./run-query {ip} {port} {state} {id} {filepath}
+    $./run-query.sh -serverAddress={ip}:{port} -state={state} -id={id} -outPath={filepath}
 
 ip: 127.0.0.1
 
@@ -83,7 +83,7 @@ party: el partido del fiscal
 
 Ejemplo:
 
-    $./run-query 127.0.1 0 0 0 ./result.csv
+    $./run-query.sh 127.0.1 0 0 0 ./result.csv
 
 # Integrantes
   - Martina Scomazzon
