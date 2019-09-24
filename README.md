@@ -55,7 +55,7 @@ filepath: debe ser el filepath absoluto de donde cargar el archivo .csv con los 
 
 ### Fiscal client:
 
-    $./run-fiscal.sh -serverAddress={ip}:{port} -id{id} -party={party}
+    $./run-fiscal.sh -serverAddress={ip}:{port} -id={id} -party={party}
 
 ip: 127.0.0.1
 
